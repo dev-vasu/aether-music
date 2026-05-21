@@ -90,8 +90,15 @@ export class YoutubeService {
     let tracks = await this.executeSearch(query, options, false);
     
     if (tracks === null && (environment as any).youtubeApiKeyBackup) {
+        console.warn('Aether: Primary API Engine exhausted. Switching to Backup Engine...');
         this.useBackupKey = true;
         tracks = await this.executeSearch(query, options, true);
+    }
+
+    // If both engines failed (null), return [] but ENSURE apiError is set for the UI
+    if (tracks === null) {
+        this.apiError.set('QUOTA_LIMIT_HIT');
+        return [];
     }
 
     return tracks || [];
@@ -100,8 +107,15 @@ export class YoutubeService {
   private async executeSearch(query: string, options: SearchOptions, useBackup: boolean): Promise<any[] | null> {
     const { isUserSearch = false, maxResults = 15 } = options;
     const apiKey = useBackup ? (environment as any).youtubeApiKeyBackup : environment.youtubeApiKey;
+    const engineName = useBackup ? 'BACKUP' : 'PRIMARY';
     
-    if (!apiKey) return [];
+    if (!apiKey || apiKey.includes('REPLACED') || apiKey.includes('YOUR_LOCAL')) {
+        console.warn(`Aether: ${engineName} key is not configured.`);
+        return [];
+    }
+
+    // DEBUG: Show first 5 chars of key being used
+    console.log(`Aether: Searching with ${engineName} engine... (Key: ${apiKey.substring(0, 5)}...)`);
 
     let refinedQuery = query;
     if (!isUserSearch && !query.toLowerCase().includes('official audio')) {
@@ -116,8 +130,14 @@ export class YoutubeService {
       
       if (data.error) {
           const reason = data.error.errors?.[0]?.reason;
-          if (reason === 'quotaExceeded' || reason === 'accessNotConfigured' || reason === 'forbidden') return null; 
-          this.apiError.set(data.error.message);
+          const message = data.error.message;
+          console.error(`YouTube API Error [${engineName}]:`, reason, message);
+
+          if (reason === 'quotaExceeded' || reason === 'accessNotConfigured' || reason === 'forbidden') {
+              return null; 
+          }
+          
+          this.apiError.set(`${engineName}: ${message}`);
           return [];
       }
       
@@ -136,7 +156,6 @@ export class YoutubeService {
         })
         .map((item: any) => {
           const clean = (text: string) => text.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').replace(/\|.*/g, '').trim();
-          // Start with maxres for ultimate HD
           const getThumb = (id: string) => `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
           return {
             id: item.id.videoId,
@@ -151,6 +170,7 @@ export class YoutubeService {
       }
       return tracks;
     } catch (e) {
+      console.error(`Network Error [${engineName}]:`, e);
       return [];
     }
   }
