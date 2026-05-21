@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectTopTracks, selectPlayerLoading } from '../../state/player/player.selectors';
 import { PlayerActions } from '../../state/player/player.actions';
@@ -261,7 +261,10 @@ export class SearchViewComponent {
   async search() {
     if (!this.searchQuery) return;
     this.isSearching = true;
-    this.store.dispatch(PlayerActions.loadPlaylists()); 
+    
+    // Explicitly trigger the loading state in the store
+    this.store.dispatch(PlayerActions.loadTopTracks()); 
+
     const tracks = await this.ytService.searchMusic(this.searchQuery, { isUserSearch: true });
     
     if (tracks.length === 0 && this.apiError()) {
@@ -269,25 +272,25 @@ export class SearchViewComponent {
         const fallback = [...curated.trending, ...curated.instaViral];
         this.store.dispatch(PlayerActions.loadTopTracksSuccess({ tracks: fallback }));
     } else {
-        this.store.dispatch(PlayerActions.loadTopTracksSuccess({ tracks }));
+        this.store.dispatch(PlayerActions.loadTopTracksSuccess({ tracks: tracks || [] }));
     }
   }
 
   handleImgError(event: any) {
       const img = event.target;
-      if (img.src.includes('maxresdefault.jpg')) {
-          img.src = img.src.replace('maxresdefault.jpg', 'sddefault.jpg');
-      } else if (img.src.includes('sddefault.jpg')) {
-          img.src = img.src.replace('sddefault.jpg', 'hqdefault.jpg');
-      } else if (img.src.includes('hqdefault.jpg')) {
-          img.src = img.src.replace('hqdefault.jpg', 'mqdefault.jpg');
+      const resolutions = ['maxresdefault.jpg', 'sddefault.jpg', 'hqdefault.jpg', 'mqdefault.jpg'];
+      const currentRes = resolutions.find(r => img.src.includes(r));
+      const nextIdx = resolutions.indexOf(currentRes!) + 1;
+      
+      if (nextIdx < resolutions.length) {
+          img.src = img.src.replace(currentRes!, resolutions[nextIdx]);
       }
   }
 
   checkSharpness(event: any) {
       const img = event.target;
-      if (img.naturalWidth === 120 && img.src.includes('maxresdefault.jpg')) {
-          img.src = img.src.replace('maxresdefault.jpg', 'sddefault.jpg');
+      if (img.naturalWidth <= 120) {
+          this.handleImgError(event);
       }
   }
 
