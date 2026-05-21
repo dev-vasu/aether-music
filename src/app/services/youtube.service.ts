@@ -95,7 +95,6 @@ export class YoutubeService {
         tracks = await this.executeSearch(query, options, true);
     }
 
-    // If both engines failed (null), return [] but ENSURE apiError is set for the UI
     if (tracks === null) {
         this.apiError.set('QUOTA_LIMIT_HIT');
         return [];
@@ -114,7 +113,6 @@ export class YoutubeService {
         return [];
     }
 
-    // DEBUG: Show first 5 chars of key being used
     console.log(`Aether: Searching with ${engineName} engine... (Key: ${apiKey.substring(0, 5)}...)`);
 
     let refinedQuery = query;
@@ -122,7 +120,8 @@ export class YoutubeService {
         refinedQuery = `${query} official audio -mashup -bhojpuri -khesari -pawan -haryanvi`;
     }
 
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=${maxResults}&q=${encodeURIComponent(refinedQuery)}&type=video&videoCategoryId=10&key=${apiKey}`;
+    // REMOVED: videoCategoryId=10 (This can sometimes be too strict for user searches)
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=${maxResults}&q=${encodeURIComponent(refinedQuery)}&type=video&key=${apiKey}`;
     
     try {
       const response = await fetch(url);
