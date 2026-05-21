@@ -18,6 +18,8 @@ export class YoutubeService {
   public isPlayerReady = signal(false);
   public apiError = signal<string | null>(null);
   
+  // Public for debugging
+  public activeKeyHint = signal<string>('N/A');
   private useBackupKey = false;
 
   constructor() {
@@ -108,19 +110,20 @@ export class YoutubeService {
     const apiKey = useBackup ? (environment as any).youtubeApiKeyBackup : environment.youtubeApiKey;
     const engineName = useBackup ? 'BACKUP' : 'PRIMARY';
     
-    if (!apiKey || apiKey.includes('REPLACED') || apiKey.includes('YOUR_LOCAL')) {
-        console.warn(`Aether: ${engineName} key is not configured.`);
-        return [];
-    }
+    // Update debug hint (first 3 chars)
+    if (apiKey) this.activeKeyHint.set(apiKey.substring(0, 3));
 
-    console.log(`Aether: Searching with ${engineName} engine... (Key: ${apiKey.substring(0, 5)}...)`);
+    // Better Placeholder Check
+    if (!apiKey || apiKey === 'V_PRIMARY_KEY' || apiKey === 'V_BACKUP_KEY' || apiKey === 'REPLACED_BY_VERCEL' || apiKey === 'YOUR_LOCAL_KEY_HERE') {
+        console.warn(`Aether: ${engineName} key is not configured or placeholder detected.`);
+        return null; // Return null to trigger fallback
+    }
 
     let refinedQuery = query;
     if (!isUserSearch && !query.toLowerCase().includes('official audio')) {
         refinedQuery = `${query} official audio -mashup -bhojpuri -khesari -pawan -haryanvi`;
     }
 
-    // REMOVED: videoCategoryId=10 (This can sometimes be too strict for user searches)
     const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=${maxResults}&q=${encodeURIComponent(refinedQuery)}&type=video&key=${apiKey}`;
     
     try {
@@ -129,14 +132,13 @@ export class YoutubeService {
       
       if (data.error) {
           const reason = data.error.errors?.[0]?.reason;
-          const message = data.error.message;
-          console.error(`YouTube API Error [${engineName}]:`, reason, message);
+          console.error(`YouTube API Error [${engineName}]:`, reason, data.error.message);
 
-          if (reason === 'quotaExceeded' || reason === 'accessNotConfigured' || reason === 'forbidden') {
+          if (reason === 'quotaExceeded' || reason === 'accessNotConfigured' || reason === 'forbidden' || reason === 'keyInvalid') {
               return null; 
           }
           
-          this.apiError.set(`${engineName}: ${message}`);
+          this.apiError.set(`${engineName}: ${data.error.message}`);
           return [];
       }
       

@@ -59,6 +59,11 @@ import { FormsModule } from '@angular/forms';
         <div class="no-results" *ngIf="!isLoading() && results().length === 0 && isSearching">
           No tracks found. Try another vibe!
         </div>
+
+        <!-- ENGINE DIAGNOSTIC HINT -->
+        <div class="engine-debug">
+            Aether Engine: {{ ytService.activeKeyHint() }}
+        </div>
       </div>
     </div>
   `,
@@ -87,6 +92,8 @@ import { FormsModule } from '@angular/forms';
     .spinner { width: 40px; height: 40px; border: 3px solid rgba(255, 255, 255, 0.1); border-top-color: #a855f7; border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .no-results { margin-top: 100px; text-align: center; opacity: 0.2; font-weight: 700; }
+    
+    .engine-debug { position: fixed; bottom: 100px; right: 20px; font-size: 9px; opacity: 0.1; font-family: monospace; text-transform: uppercase; letter-spacing: 1px; }
 
     @media (max-width: 768px) {
         .view-container { padding: 20px; }
@@ -94,12 +101,13 @@ import { FormsModule } from '@angular/forms';
         .search-bar { width: 100% !important; padding: 10px 16px; }
         .track-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
         .img-container { margin-bottom: 12px; border-radius: 14px; }
+        .engine-debug { bottom: 160px; }
     }
   `]
 })
 export class SearchViewComponent {
   private store = inject(Store);
-  private ytService = inject(YoutubeService);
+  public ytService = inject(YoutubeService);
   
   results = this.store.selectSignal(selectTopTracks);
   isLoading = this.store.selectSignal(selectPlayerLoading);
@@ -115,7 +123,6 @@ export class SearchViewComponent {
 
     const tracks = await this.ytService.searchMusic(this.searchQuery, { isUserSearch: true });
     
-    // Check if result is empty AND we hit a quota limit
     if (tracks.length === 0 && (this.apiError() === 'QUOTA_LIMIT_HIT' || this.apiError()?.includes('BACKUP'))) {
         const curated = this.ytService.getCuratedMockData();
         const fallback = [...curated.trending, ...curated.instaViral, ...curated.english];
