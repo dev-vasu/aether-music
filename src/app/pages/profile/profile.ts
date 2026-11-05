@@ -53,6 +53,10 @@ import { selectIsPlaying, selectVibeProfile } from '../../state/player/player.se
                 <span class="eq-dot"></span>
               </div>
             </div>
+            <div class="avatar-entity-badge">
+              <span class="entity-name">{{ authService.getAvatarMeta().name }}</span>
+              <span class="entity-sub">{{ authService.getAvatarMeta().subtitle }}</span>
+            </div>
             <button class="customize-trigger" (click)="showGallery.set(!showGallery())">
               <svg viewBox="0 0 24 24" class="btn-icon"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
               {{ showGallery() ? 'Close Gallery' : 'Switch Entity' }}
@@ -101,8 +105,13 @@ import { selectIsPlaying, selectVibeProfile } from '../../state/player/player.se
             <div class="avatar-item" *ngFor="let av of authService.funkyAvatars" 
                  [class.active]="selectedAvatar() === av.id"
                  [style.background]="av.color"
-                 (click)="selectAvatar(av.id)">
+                 (click)="selectAvatar(av.id)"
+                 [title]="av.name + ' • ' + av.subtitle">
               <div class="mini-svg" [innerHTML]="authService.getAvatarSvg(av.id)"></div>
+              <div class="avatar-item-meta">
+                <span class="av-name">{{ av.name }}</span>
+                <span class="av-sub">{{ av.subtitle }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -401,6 +410,30 @@ import { selectIsPlaying, selectVibeProfile } from '../../state/player/player.se
       50% { opacity: 1; transform: scale(1.2); }
     }
 
+    .avatar-entity-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      margin-top: 2px;
+      margin-bottom: 2px;
+      text-align: center;
+    }
+    .entity-name {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      color: #f3f4f6;
+    }
+    .entity-sub {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      color: #ff5722;
+      text-transform: uppercase;
+    }
+
     .customize-trigger {
       background: #24262c;
       border: 1px solid rgba(255, 255, 255, 0.12);
@@ -512,19 +545,63 @@ import { selectIsPlaying, selectVibeProfile } from '../../state/player/player.se
     .grid-count { font-family: var(--font-mono); font-size: 9.5px; color: #9ca3af; }
     .grid-content { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
     .avatar-item {
-      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 4px 8px;
       border-radius: 12px;
       cursor: pointer;
+      border: 1.5px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .avatar-item.active {
+      border-color: #ff5722;
+      box-shadow: 0 0 16px rgba(255, 87, 34, 0.45), inset 0 0 12px rgba(255, 87, 34, 0.15);
+      transform: scale(1.04);
+    }
+    .avatar-item:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 87, 34, 0.6);
+    }
+    .mini-svg {
+      width: 38px;
+      height: 38px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 2px solid transparent;
-      transition: all 0.2s;
     }
-    .avatar-item.active { border-color: #ff5722; transform: scale(1.05); }
-    .avatar-item:hover { transform: translateY(-2px); }
-    .mini-svg { width: 30px; height: 30px; }
-    .mini-svg ::ng-deep svg { width: 100%; height: 100%; display: block; }
+    .mini-svg ::ng-deep svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); }
+    .avatar-item-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      width: 100%;
+      text-align: center;
+    }
+    .av-name {
+      font-size: 10px;
+      font-weight: 700;
+      color: #f3f4f6;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 85px;
+    }
+    .av-sub {
+      font-family: var(--font-mono);
+      font-size: 7.5px;
+      color: #9ca3af;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 85px;
+    }
 
     .passport-actions {
       padding-top: 24px;

@@ -24,16 +24,76 @@ export class GoogleAuthService {
   public gateDismissed = signal<boolean>(false);
 
   public funkyAvatars = [
-    { id: 1, name: 'Cyber Cat', color: 'linear-gradient(135deg, #FF0080, #7928CA)', svg: `<svg viewBox="0 0 24 24"><path fill="#fff" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8 S16.41,20,12,20z M7,10c0.55,0,1-0.45,1-1c0-0.55-0.45-1-1-1s-1,0.45-1,1C6,9.55,6.45,10,7,10z M17,10c0.55,0,1-0.45,1-1 c0-0.55-0.45-1-1-1s-1,0.45-1,1C16,9.55,16.45,10,17,10z M12,14c-1.33,0-4,0.67-4,2v1h8v-1C16,14.67,13.33,14,12,14z"/></svg>` },
-    { id: 2, name: 'Neon Samurai', color: 'linear-gradient(135deg, #00DFD8, #007CF0)', svg: `<svg viewBox="0 0 24 24"><path fill="#fff" d="M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2z M12,15.4L8.5,17.3L12,5.5L15.5,17.3L12,15.4z"/></svg>` },
-    { id: 3, name: 'Vapor Wave', color: 'linear-gradient(135deg, #FF4D4D, #F9CB28)', svg: `<svg viewBox="0 0 24 24"><path fill="#fff" d="M12,2L2,12h3v8h6v-6h2v6h6v-8h3L12,2z M12,10c-1.1,0-2-0.9-2-2s0.9-2,2-2s2,0.9,2,2S13.1,10,12,10z"/></svg>` },
-    { id: 4, name: 'Phonk Ghost', color: 'linear-gradient(135deg, #333, #000)', svg: `<svg viewBox="0 0 24 24"><path fill="#fff" d="M12,2c-4.97,0-8,4.03-8,9c0,4.17,2.84,7.67,6.69,8.69L12,22l2.31-2.31C18.16,18.67,21,15.17,21,11C21,6.03,17.97,2,12,2z M12,14 c-1.1,0-2-0.9-2-2s0.9-2,2-2s2,0.9,2,2S13.1,14,12,14z"/></svg>` },
-    { id: 5, name: 'Techno Shroom', color: 'linear-gradient(135deg, #8E2DE2, #4A00E0)', svg: `<svg viewBox="0 0 24 24"><path fill="#fff" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,15c-1.66,0-3-1.34-3-3s1.34-3,3-3s3,1.34,3,3 S13.66,15,12,15z"/></svg>` },
-    { id: 6, name: 'Retro Bot', color: 'linear-gradient(135deg, #00F2FE, #4FACFE)', svg: `<svg viewBox="0 0 24 24"><path fill="#fff" d="M12,2c-4.97,0-9,4.03-9,9c0,3.92,2.6,7.22,6.1,8.38l-1.1,1.1l1.42,1.42L12,19.33l2.58,2.58l1.42-1.42l-1.1-1.1 c3.5-1.16,6.1-4.46,6.1-8.38C21,6.03,16.97,2,12,2z M12,14c-1.1,0-2-0.9-2-2s0.9-2,2-2s2,0.9,2,2S13.1,14,12,14z"/></svg>` },
-    { id: 7, name: 'Glow Skull', color: 'linear-gradient(135deg, #F093FB, #F5576C)', svg: `<svg viewBox="0 0 24 24"><path fill="#fff" d="M12,2c-4.97,0-9,4.03-9,9c0,4.97,4.03,9,9,9s9-4.03,9-9C21,6.03,16.97,2,12,2z M12,17c-1.66,0-3-1.34-3-3s1.34-3,3-3 s3,1.34,3,3S13.66,17,12,17z"/></svg>` },
-    { id: 8, name: 'Glitch Diamond', color: 'linear-gradient(135deg, #5EE7DF, #B490CA)', svg: `<svg viewBox="0 0 24 24"><path fill="#fff" d="M12.12,3L20.5,12l-8.38,9l-8.37-9L12.12,3z M12.12,15.6L15.3,12l-3.18-3.6L8.94,12L12.12,15.6z"/></svg>` },
-    { id: 9, name: 'Stellar Pulse', color: 'linear-gradient(135deg, #667eea, #764ba2)', svg: `<svg viewBox="0 0 24 24"><path fill="#fff" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,18c-3.31,0-6-2.69-6-6s2.69-6,6-6s6,2.69,6,6 S15.31,18,12,18z"/></svg>` },
-    { id: 10, name: 'Dark Nebula', color: 'linear-gradient(135deg, #16213E, #0F3460)', svg: `<svg viewBox="0 0 24 24"><path fill="#fff" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,16c-2.21,0-4-1.79-4-4s1.79-4,4-4s4,1.79,4,4 S14.21,16,12,16z"/></svg>` }
+    {
+      id: 1,
+      name: 'Monolith',
+      subtitle: 'Resonance Prism',
+      color: 'linear-gradient(135deg, #1f2026, #111215)',
+      svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M32 6L54 18V46L32 58L10 46V18L32 6Z" fill="#1e2025" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><path d="M32 6L54 18L32 30L10 18L32 6Z" fill="#292c34" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/><path d="M32 30V58L10 46V18L32 30Z" fill="#15171b"/><path d="M32 30L54 18V46L32 58V30Z" fill="#1b1d22"/><circle cx="32" cy="30" r="5" fill="#ff5722"/><path d="M32 20L44 26" stroke="#ff5722" stroke-width="2" stroke-linecap="round"/><path d="M32 40L44 34" stroke="#ff5722" stroke-width="2" stroke-linecap="round"/><path d="M32 48L44 42" stroke="rgba(255,87,34,0.5)" stroke-width="1.5" stroke-linecap="round"/></svg>`
+    },
+    {
+      id: 2,
+      name: 'Vinyl Stylus',
+      subtitle: 'Microgroove Head',
+      color: 'linear-gradient(135deg, #241d18, #130f0c)',
+      svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="34" r="24" fill="#111215" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><circle cx="30" cy="34" r="18" stroke="rgba(255,255,255,0.08)" stroke-width="1.2"/><circle cx="30" cy="34" r="13" stroke="rgba(255,255,255,0.08)" stroke-width="1.2"/><circle cx="30" cy="34" r="8" fill="#ff5722"/><circle cx="30" cy="34" r="3" fill="#ffffff"/><path d="M54 10L42 26L33 32" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="31" y="30" width="5" height="5" rx="1" transform="rotate(45 31 30)" fill="#ff5722"/><circle cx="54" cy="10" r="3.5" fill="#2a2b30" stroke="#ff5722" stroke-width="1.5"/></svg>`
+    },
+    {
+      id: 3,
+      name: 'Oscilloscope',
+      subtitle: 'Cathode Waveform',
+      color: 'linear-gradient(135deg, #152220, #0c1413)',
+      svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="8" width="48" height="48" rx="8" fill="#111416" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/><line x1="32" y1="12" x2="32" y2="52" stroke="rgba(255,255,255,0.06)" stroke-width="1"/><line x1="12" y1="32" x2="52" y2="32" stroke="rgba(255,255,255,0.06)" stroke-width="1"/><path d="M16 32 C 16 16, 48 16, 48 32 C 48 48, 16 48, 16 32 Z" stroke="#ff5722" stroke-width="2.2" stroke-linecap="round"/><circle cx="32" cy="32" r="2.5" fill="#ffffff"/></svg>`
+    },
+    {
+      id: 4,
+      name: 'Tape Reel',
+      subtitle: '15-IPS Master Hub',
+      color: 'linear-gradient(135deg, #22232a, #131417)',
+      svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="25" fill="#17181c" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><path d="M32 14A18 18 0 0 0 16.4 41L24 37A9 9 0 0 1 32 23Z" fill="#25272e"/><path d="M47.6 41A18 18 0 0 0 32 14V23A9 9 0 0 1 40 37Z" fill="#25272e"/><path d="M16.4 41A18 18 0 0 0 47.6 41L40 37A9 9 0 0 1 24 37Z" fill="#25272e"/><circle cx="32" cy="32" r="8" fill="#ff5722"/><circle cx="32" cy="32" r="3" fill="#ffffff"/><circle cx="32" cy="18" r="1.5" fill="#ffffff"/><circle cx="20" cy="39" r="1.5" fill="#ffffff"/><circle cx="44" cy="39" r="1.5" fill="#ffffff"/></svg>`
+    },
+    {
+      id: 5,
+      name: 'Triode Valve',
+      subtitle: 'Thermionic Tube',
+      color: 'linear-gradient(135deg, #281c15, #140d09)',
+      svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 10C22 7.8 23.8 6 26 6H38C40.2 6 42 7.8 42 10V46C42 48.2 40.2 50 38 50H26C23.8 50 22 48.2 22 46Z" fill="#141518" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><rect x="25" y="50" width="14" height="6" rx="2" fill="#25272e"/><line x1="28" y1="56" x2="28" y2="60" stroke="#9ca3af" stroke-width="1.5"/><line x1="32" y1="56" x2="32" y2="60" stroke="#9ca3af" stroke-width="1.5"/><line x1="36" y1="56" x2="36" y2="60" stroke="#9ca3af" stroke-width="1.5"/><path d="M27 20H37V38H27Z" fill="rgba(255,87,34,0.12)" stroke="rgba(255,87,34,0.4)" stroke-width="1"/><path d="M30 16V40M34 16V40" stroke="#ff5722" stroke-width="1.8" stroke-linecap="round"/><circle cx="32" cy="28" r="3" fill="#ff7043"/></svg>`
+    },
+    {
+      id: 6,
+      name: 'Waveguide',
+      subtitle: 'Acoustic Phase Lens',
+      color: 'linear-gradient(135deg, #1c222b, #0f141a)',
+      svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="25" fill="#15171b" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><circle cx="32" cy="32" r="19" stroke="rgba(255,255,255,0.1)" stroke-width="1.2"/><circle cx="32" cy="32" r="13" stroke="rgba(255,255,255,0.1)" stroke-width="1.2"/><circle cx="32" cy="32" r="8" fill="#2b2d35" stroke="#ff5722" stroke-width="1.5"/><path d="M32 18V46M18 32H46" stroke="#ff5722" stroke-width="1.5" stroke-linecap="round"/><circle cx="32" cy="32" r="3" fill="#ff5722"/></svg>`
+    },
+    {
+      id: 7,
+      name: 'Transducer',
+      subtitle: 'Spatial Matrix',
+      color: 'linear-gradient(135deg, #241928, #120b15)',
+      svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="14" width="36" height="36" rx="6" fill="#17181c" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/><rect x="22" y="22" width="20" height="20" rx="3" fill="#24262c" stroke="#ff5722" stroke-width="1.2"/><circle cx="32" cy="32" r="4" fill="#ff5722"/><line x1="32" y1="8" x2="32" y2="14" stroke="#ff5722" stroke-width="2" stroke-linecap="round"/><line x1="32" y1="50" x2="32" y2="56" stroke="#ff5722" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="32" x2="14" y2="32" stroke="#ff5722" stroke-width="2" stroke-linecap="round"/><line x1="50" y1="32" x2="56" y2="32" stroke="#ff5722" stroke-width="2" stroke-linecap="round"/></svg>`
+    },
+    {
+      id: 8,
+      name: 'Diaphragm',
+      subtitle: 'Gold Condenser',
+      color: 'linear-gradient(135deg, #272115, #14110a)',
+      svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="25" fill="#191713" stroke="#f59e0b" stroke-width="1.5"/><circle cx="32" cy="32" r="21" stroke="rgba(245,158,11,0.3)" stroke-width="1.2" stroke-dasharray="2 3"/><circle cx="32" cy="32" r="14" fill="#282215" stroke="#f59e0b" stroke-width="1.5"/><circle cx="32" cy="32" r="5" fill="#ff5722"/><circle cx="32" cy="32" r="2" fill="#ffffff"/><circle cx="21" cy="21" r="1.5" fill="#f59e0b"/><circle cx="43" cy="21" r="1.5" fill="#f59e0b"/><circle cx="21" cy="43" r="1.5" fill="#f59e0b"/><circle cx="43" cy="43" r="1.5" fill="#f59e0b"/></svg>`
+    },
+    {
+      id: 9,
+      name: 'Acoustic Horn',
+      subtitle: 'Fibonacci Spiral',
+      color: 'linear-gradient(135deg, #1b2520, #0d1410)',
+      svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="25" fill="#141816" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/><path d="M32 10C44.15 10 54 19.85 54 32C54 44.15 44.15 54 32 54C22.06 54 14 45.94 14 36C14 27.72 20.72 21 29 21C35.63 21 41 26.37 41 33C41 38.52 36.52 43 31 43C26.58 43 23 39.42 23 35C23 31.69 25.69 29 29 29C31.21 29 33 30.79 33 33" stroke="#10b981" stroke-width="2.2" stroke-linecap="round"/><circle cx="33" cy="33" r="2" fill="#ff5722"/></svg>`
+    },
+    {
+      id: 10,
+      name: 'Master Core',
+      subtitle: 'Knurled Rotary Crown',
+      color: 'linear-gradient(135deg, #2a221f, #15100e)',
+      svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="26" fill="#1e1f24" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/><circle cx="32" cy="32" r="21" stroke="rgba(255,87,34,0.4)" stroke-width="1.2" stroke-dasharray="3 3"/><circle cx="32" cy="32" r="16" fill="#282a32" stroke="rgba(255,255,255,0.15)" stroke-width="1.2"/><circle cx="32" cy="32" r="9" fill="#141518" stroke="#ff5722" stroke-width="1.5"/><circle cx="32" cy="32" r="4" fill="#ff5722"/><circle cx="32" cy="32" r="1.5" fill="#ffffff"/><line x1="32" y1="7" x2="32" y2="10" stroke="#ff5722" stroke-width="2" stroke-linecap="round"/></svg>`
+    }
   ];
 
   public sessionTracksPlayed = signal<number>(0);
@@ -57,6 +117,15 @@ export class GoogleAuthService {
   getAvatarColor(id?: number): string {
       const avatarId = id !== undefined ? id : this.userProfile()?.avatarId;
       return this.funkyAvatars.find(a => a.id === avatarId)?.color || 'rgba(255,255,255,0.05)';
+  }
+
+  getAvatarMeta(id?: number): { name: string; subtitle: string } {
+      const avatarId = id !== undefined ? id : this.userProfile()?.avatarId;
+      const avatar = this.funkyAvatars.find(a => a.id === avatarId);
+      return {
+          name: avatar ? avatar.name : 'Acoustic Node',
+          subtitle: avatar ? avatar.subtitle : 'Standard Entity'
+      };
   }
 
   incrementTrackCount() {
