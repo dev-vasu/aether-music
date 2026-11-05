@@ -31,8 +31,9 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       <nav class="aurora-nav">
         <div class="glass-dock">
           <div class="dock-brand">
-            <span class="brand-spark">✦</span>
+            <span class="braun-dot"></span>
             <span class="brand-text">AETHER</span>
+            <span class="brand-sub">AUDIO</span>
           </div>
           <div class="dock-separator"></div>
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="dock-link" title="Home">
@@ -53,7 +54,7 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       <!-- Global Identity Dock (Top Right) & Shortcuts Helper -->
       <div class="identity-anchor">
         <button class="shortcuts-trigger" (click)="showShortcuts.set(!showShortcuts())" title="Keyboard Shortcuts (?)">
-          ⌨️
+          <svg viewBox="0 0 24 24" class="sc-icon"><path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>
         </button>
 
         <button *ngIf="!isLoggedIn()" (click)="login()" class="aurora-btn mini">
@@ -75,14 +76,16 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
         
         <!-- Subtle Credit Footer -->
         <footer class="app-credit">
-          Aether Music &bull; Cosmic Living Soundscape &bull; Built with ❤️ by Vasu
+          Aether Sound Engine &bull; Lossless Master &bull; Curated by Vasu
         </footer>
       </main>
 
       <!-- Global Trial Gate Overlay (Friendly, Non-blocking Modal) -->
       <div class="trial-gate-overlay" *ngIf="showGate()">
         <div class="gate-card glass">
-          <button class="gate-close-btn" (click)="authService.dismissGate()" title="Close">✕</button>
+          <button class="gate-close-btn" (click)="authService.dismissGate()" title="Close">
+            <svg viewBox="0 0 24 24" class="inline-close"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
           <div class="gate-icon">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8,8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
           </div>
@@ -105,7 +108,9 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
         <div class="shortcuts-card glass" (click)="$event.stopPropagation()">
           <div class="sc-header">
             <h3>Cosmic Controls</h3>
-            <button class="sc-close" (click)="showShortcuts.set(false)">✕</button>
+            <button class="sc-close" (click)="showShortcuts.set(false)" title="Close">
+            <svg viewBox="0 0 24 24" class="inline-close"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
           </div>
           <div class="sc-grid">
             <div class="sc-row"><kbd>Space</kbd> <span>Play / Pause</span></div>
@@ -194,50 +199,56 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
     .dock-brand {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 0 10px 0 6px;
+      gap: 8px;
+      padding: 0 12px 0 8px;
     }
-    .brand-spark {
-      color: #a855f7;
-      font-size: 14px;
-      animation: pulse 2s infinite;
-      text-shadow: 0 0 10px #a855f7;
+    .braun-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ff5722;
+      box-shadow: 0 0 8px rgba(255, 87, 34, 0.6);
     }
     .brand-text {
-      font-family: var(--font-display);
-      font-weight: 900;
+      font-weight: 800;
       font-size: 13px;
       letter-spacing: 2px;
-      background: linear-gradient(135deg, #ffffff 40%, #c084fc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #ffffff;
+    }
+    .brand-sub {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: #9ca3af;
     }
     .dock-separator {
       width: 1px;
       height: 20px;
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.08);
       margin: 0 4px;
     }
 
     .dock-link { 
-      height: 42px; 
-      padding: 0 18px; 
+      height: 40px; 
+      padding: 0 16px; 
       display: flex; 
       align-items: center; 
       gap: 8px; 
-      border-radius: 24px; 
-      color: white; 
+      border-radius: 20px; 
+      color: #9ca3af; 
       text-decoration: none; 
-      opacity: 0.45; 
-      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); 
+      opacity: 0.6; 
+      transition: all 0.25s ease; 
     }
-    .dock-link svg { width: 19px; height: 19px; fill: currentColor; }
-    .dock-link .label { font-size: 13px; font-weight: 700; letter-spacing: -0.2px; display: none; }
-    .dock-link:hover { opacity: 0.85; background: rgba(255, 255, 255, 0.08); }
+    .dock-link svg { width: 17px; height: 17px; fill: currentColor; }
+    .dock-link .label { font-size: 12px; font-weight: 600; letter-spacing: -0.1px; display: none; }
+    .dock-link:hover { opacity: 1; color: #ffffff; background: rgba(255, 255, 255, 0.05); }
     .dock-link.active {
       opacity: 1;
-      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-      box-shadow: 0 8px 20px rgba(168, 85, 247, 0.4);
+      color: #ffffff;
+      background: #24262c;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
     }
     .dock-link.active .label { display: block; }
 
@@ -251,22 +262,28 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       gap: 12px;
     }
     .shortcuts-trigger {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #1c1e23;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 50%;
       width: 36px;
       height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
       cursor: pointer;
-      transition: all 0.25s;
+      color: #9ca3af;
+      transition: all 0.2s;
     }
     .shortcuts-trigger:hover {
-      background: rgba(168, 85, 247, 0.25);
-      border-color: #a855f7;
-      transform: scale(1.1);
+      background: #24262c;
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .sc-icon {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
     }
 
     .aurora-btn.mini {
@@ -377,6 +394,7 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       transition: color 0.2s;
     }
     .gate-close-btn:hover { color: white; }
+    .inline-close { width: 16px; height: 16px; fill: currentColor; display: block; }
     .gate-icon { width: 70px; height: 70px; margin: 0 auto 20px auto; color: #a855f7; }
     .gate-icon svg { width: 100%; height: 100%; fill: currentColor; }
     .gate-card h2 { font-size: 28px; font-weight: 900; margin-bottom: 12px; letter-spacing: -0.8px; }
@@ -534,13 +552,13 @@ export class App {
           this.toastService.show('Removed from Favorites', 'info');
         } else {
           this.libraryService.addTrackToPlaylist('favorites', t);
-          this.toastService.show('Added to Favorites ❤️', 'success');
+          this.toastService.show('Added to Favorites', 'success');
         }
       }
     } else if (event.code === 'KeyS') {
       event.preventDefault();
       this.store.dispatch(PlayerActions.toggleShuffle());
-      this.toastService.show(!this.isShuffled() ? 'Shuffle On 🔀' : 'Shuffle Off ➡️', 'info');
+      this.toastService.show(!this.isShuffled() ? 'Shuffle Active' : 'Shuffle Off', 'info');
     } else if (event.code === 'KeyR') {
       event.preventDefault();
       this.store.dispatch(PlayerActions.cycleRepeat());

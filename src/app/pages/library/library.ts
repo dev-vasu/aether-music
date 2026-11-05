@@ -94,7 +94,7 @@ import { selectCurrentTrack, selectIsPlaying } from '../../state/player/player.s
           <div class="track-list">
             <div *ngIf="selectedPlaylist()?.tracks?.length === 0" class="empty-tracks">
               <p>This playlist is empty.</p>
-              <p class="hint">Use the Heart ❤️ or '+' button in the player bar to add tracks here.</p>
+              <p class="hint">Use the Heart or '+' button in the player bar to add tracks here.</p>
             </div>
             
             <div

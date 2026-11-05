@@ -13,37 +13,39 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="aurora-view">
+    <div class="braun-home-view">
       <!-- CATEGORY FILTER CHIPS -->
       <div class="category-filter-bar">
         <button
           class="cat-chip"
           [class.active-chip]="activeCategory() === 'all'"
           (click)="activeCategory.set('all')">
-          🌌 All Cosmic Orbits
+          <span class="chip-dot" *ngIf="activeCategory() === 'all'"></span>
+          All Recordings
         </button>
         <button
           class="cat-chip"
           *ngFor="let cat of musicCategories"
           [class.active-chip]="activeCategory() === cat.key"
           (click)="activeCategory.set(cat.key)">
-          {{ cat.emoji }} {{ cat.title }}
+          <span class="chip-dot" *ngIf="activeCategory() === cat.key"></span>
+          {{ cat.title }}
         </button>
       </div>
 
       <div class="feed-content">
         <div class="discovery-loader" *ngIf="isLoading()">
           <div class="pulse-ring"></div>
-          <span>Syncing with the Cosmos...</span>
+          <span>Loading Master Audio Archive...</span>
         </div>
 
-        <div *ngIf="!isLoading()" class="aurora-stacks">
+        <div *ngIf="!isLoading()" class="catalog-stacks">
           <section
             class="sound-row"
             *ngFor="let cat of filteredCategories(); let i = index">
             <div class="sound-meta">
               <div class="meta-title-group">
-                <span class="index">0{{ i + 1 }}</span>
+                <span class="index">{{ cat.index }} //</span>
                 <h2>{{ cat.title }}</h2>
               </div>
               <button
@@ -51,7 +53,7 @@ import { CommonModule } from '@angular/common';
                 (click)="playAllInRow(cat.key)"
                 [title]="'Play all in ' + cat.title">
                 <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                Play Orbit
+                Play Section
               </button>
             </div>
             
@@ -91,11 +93,11 @@ import { CommonModule } from '@angular/common';
     </div>
   `,
   styles: [`
-    .aurora-view {
+    .braun-home-view {
       padding: 24px 48px;
     }
 
-    /* CATEGORY FILTER CHIPS */
+    /* MINIMALIST CATEGORY CHIPS */
     .category-filter-bar {
       display: flex;
       align-items: center;
@@ -105,102 +107,115 @@ import { CommonModule } from '@angular/common';
       margin-bottom: 36px;
     }
     .category-filter-bar::-webkit-scrollbar { height: 0; }
+    
     .cat-chip {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      color: rgba(255, 255, 255, 0.7);
-      padding: 10px 20px;
-      border-radius: 50px;
-      font-size: 13px;
-      font-weight: 700;
+      background: #17181c;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #9ca3af;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.25s;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 7px;
     }
     .cat-chip:hover {
-      background: rgba(168, 85, 247, 0.15);
-      border-color: #a855f7;
-      color: white;
-      transform: translateY(-2px);
+      background: #202227;
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.18);
     }
     .cat-chip.active-chip {
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      border-color: transparent;
-      color: white;
-      box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+      background: #24262c;
+      border-color: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+    .chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ff5722;
+      box-shadow: 0 0 6px rgba(255, 87, 34, 0.6);
     }
 
-    /* SOUND ROWS & CARDS */
-    .aurora-stacks {
+    /* CATALOG STACKS */
+    .catalog-stacks {
       display: flex;
       flex-direction: column;
-      gap: 56px;
+      gap: 52px;
     }
     .sound-row .sound-meta {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 22px;
+      margin-bottom: 18px;
     }
     .meta-title-group {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
     .index {
-      font-size: 14px;
+      font-size: 13px;
       font-family: var(--font-mono);
-      opacity: 0.35;
-      color: #a855f7;
+      font-weight: 700;
+      color: #ff5722;
+      opacity: 0.85;
+      letter-spacing: 1px;
     }
     .sound-row h2 {
-      font-size: 26px;
-      font-weight: 900;
-      letter-spacing: -0.5px;
-      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: #f3f4f6;
     }
     .row-play-all {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: white;
-      padding: 7px 16px;
-      border-radius: 50px;
+      background: #1c1e23;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #9ca3af;
+      padding: 6px 14px;
+      border-radius: 16px;
       font-size: 11px;
-      font-weight: 800;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.8px;
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.25s;
+      transition: all 0.2s;
     }
-    .row-play-all svg { width: 14px; height: 14px; fill: #a855f7; }
+    .row-play-all svg { width: 12px; height: 12px; fill: #ff5722; }
     .row-play-all:hover {
-      background: rgba(168, 85, 247, 0.25);
-      border-color: #a855f7;
-      transform: scale(1.05);
+      background: #24262c;
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.2);
     }
 
     .track-flow {
       display: flex;
-      gap: 28px;
+      gap: 22px;
       overflow-x: auto;
-      padding-bottom: 24px;
+      padding-bottom: 20px;
     }
     .track-flow::-webkit-scrollbar { height: 0; }
     
     .art-card {
-      width: 215px;
+      width: 200px;
       flex-shrink: 0;
       cursor: pointer;
-      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+      transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     }
     .art-card.is-active-card .card-visual {
-      box-shadow: 0 10px 30px rgba(168, 85, 247, 0.5);
-      border-color: #a855f7;
+      border-color: #ff5722;
+      box-shadow: 0 8px 24px rgba(255, 87, 34, 0.2);
     }
     .art-card:hover {
-      transform: translateY(-8px);
+      transform: translateY(-4px);
     }
     .art-card:hover .hover-glow {
       opacity: 1;
@@ -210,64 +225,61 @@ import { CommonModule } from '@angular/common';
       transform: translate(-50%, -50%) scale(1);
     }
     .art-card:hover .track-image {
-      transform: scale(1.08);
+      transform: scale(1.04);
     }
 
     .card-visual {
       position: relative;
-      width: 215px;
-      height: 215px;
-      border-radius: 24px;
+      width: 200px;
+      height: 200px;
+      border-radius: 8px;
       overflow: hidden;
-      margin-bottom: 16px;
-      background: #0d0c18;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-      transition: all 0.3s ease;
+      margin-bottom: 12px;
+      background: #141518;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+      transition: all 0.25s ease;
     }
     .track-image {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+      transition: transform 0.4s ease;
     }
     .hover-glow {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(180deg, transparent 40%, rgba(3, 0, 8, 0.8) 100%);
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(10, 11, 14, 0.7) 100%);
       opacity: 0;
-      transition: opacity 0.3s;
+      transition: opacity 0.25s;
     }
 
     .card-eq-overlay {
       position: absolute;
-      bottom: 16px;
-      right: 16px;
+      bottom: 10px;
+      right: 10px;
       display: flex;
       align-items: flex-end;
-      gap: 3px;
-      height: 18px;
-      background: rgba(0, 0, 0, 0.75);
+      gap: 2.5px;
+      height: 16px;
+      background: rgba(18, 19, 22, 0.85);
       backdrop-filter: blur(8px);
-      padding: 4px 8px;
-      border-radius: 12px;
-      border: 1px solid rgba(168, 85, 247, 0.4);
+      padding: 3px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 87, 34, 0.4);
     }
     .c-bar {
-      width: 3px;
-      background: #a855f7;
-      border-radius: 2px;
+      width: 2.5px;
+      background: #ff5722;
+      border-radius: 1px;
       animation: cWave 0.7s ease-in-out infinite alternate;
     }
-    .c-bar:nth-child(1) { height: 60%; animation-delay: 0.1s; }
+    .c-bar:nth-child(1) { height: 50%; animation-delay: 0.1s; }
     .c-bar:nth-child(2) { height: 100%; animation-delay: 0.3s; }
     .c-bar:nth-child(3) { height: 40%; animation-delay: 0.2s; }
 
     @keyframes cWave {
-      0% { height: 20%; }
+      0% { height: 25%; }
       100% { height: 100%; }
     }
 
@@ -275,37 +287,39 @@ import { CommonModule } from '@angular/common';
       position: absolute;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%) scale(0.8);
-      width: 50px;
-      height: 50px;
-      background: white;
+      transform: translate(-50%, -50%) scale(0.85);
+      width: 44px;
+      height: 44px;
+      background: #1c1e23;
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       opacity: 0;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      transition: all 0.25s ease;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
     }
     .play-trigger svg {
-      width: 20px;
-      height: 20px;
-      fill: #000;
-      margin-left: 3px;
+      width: 18px;
+      height: 18px;
+      fill: #ff5722;
+      margin-left: 2px;
     }
 
     .card-info .name {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 4px;
+      font-size: 13.5px;
+      font-weight: 600;
+      margin-bottom: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      color: rgba(255, 255, 255, 0.95);
+      color: #f3f4f6;
+      letter-spacing: -0.1px;
     }
     .card-info .creator {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.45);
+      font-size: 12px;
+      color: #9ca3af;
       font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
@@ -318,21 +332,35 @@ import { CommonModule } from '@angular/common';
       align-items: center;
       justify-content: center;
       padding: 80px 0;
-      gap: 20px;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.5);
+      gap: 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #9ca3af;
     }
     .pulse-ring {
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      border: 3px solid rgba(168, 85, 247, 0.2);
-      border-top-color: #a855f7;
-      animation: spin 1s linear infinite;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #ff5722;
+      animation: spin 0.9s linear infinite;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .braun-home-view {
+        padding: 16px 20px;
+      }
+      .art-card {
+        width: 160px;
+      }
+      .card-visual {
+        width: 160px;
+        height: 160px;
+      }
     }
   `]
 })
@@ -350,12 +378,12 @@ export class HomeViewComponent implements OnInit {
   activeCategory = signal<string>('all');
 
   musicCategories = [
-    { title: 'The Pulsar', key: 'trending' as const, emoji: '⚡' },
-    { title: 'Solar Echoes', key: 'instaViral' as const, emoji: '🔥' },
-    { title: 'Veda Beats', key: 'devotional' as const, emoji: '🕉️' },
-    { title: 'Eastern Flow', key: 'hindi' as const, emoji: '🎵' },
-    { title: 'Cyber Punjabi', key: 'punjabi' as const, emoji: '💥' },
-    { title: 'Nebula Pop', key: 'english' as const, emoji: '✨' }
+    { title: 'Global Trending', key: 'trending' as const, index: '01' },
+    { title: 'Viral Rotation', key: 'instaViral' as const, index: '02' },
+    { title: 'Spiritual & Veda', key: 'devotional' as const, index: '03' },
+    { title: 'Bollywood Classics', key: 'hindi' as const, index: '04' },
+    { title: 'Punjabi Hits', key: 'punjabi' as const, index: '05' },
+    { title: 'Global Anthems', key: 'english' as const, index: '06' }
   ];
 
   filteredCategories = computed(() => {
@@ -393,14 +421,13 @@ export class HomeViewComponent implements OnInit {
     } else {
       this.store.dispatch(PlayerActions.setCurrentTrack({ track }));
     }
-    this.toast.show(`Playing: ${track.name}`, 'info');
   }
 
   playAllInRow(categoryKey: string) {
     const rowTracks = this.musicData()[categoryKey as keyof ReturnType<typeof this.musicData>] || [];
     if (rowTracks.length > 0) {
       this.store.dispatch(PlayerActions.setQueue({ tracks: rowTracks, startIndex: 0 }));
-      this.toast.show(`Playing Orbit: ${rowTracks[0]?.name}`, 'info');
+      this.toast.show(`Playing ${categoryKey} catalog`, 'info');
     }
   }
 }

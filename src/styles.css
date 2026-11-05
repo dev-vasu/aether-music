@@ -1,12 +1,19 @@
 :root {
-  --font-display: 'Syne', system-ui, sans-serif;
-  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: 'Space Mono', monospace;
-  --aurora-primary: #a855f7;
-  --aurora-secondary: #6366f1;
-  --aurora-accent: #ec4899;
-  --aurora-cyan: #06b6d4;
-  --bg-deep: #030008;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Space Mono', monospace;
+
+  /* Bang & Olufsen / Braun Functionalist Palette */
+  --braun-amber: #ff5722;
+  --braun-amber-glow: rgba(255, 87, 34, 0.35);
+  --bg-deep: #111215;
+  --bg-surface: #17181c;
+  --bg-card: #1c1e23;
+  --border-hairline: rgba(255, 255, 255, 0.07);
+  --border-hover: rgba(255, 255, 255, 0.16);
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
 }
 
 * {
@@ -16,14 +23,14 @@
 }
 
 ::selection {
-  background: rgba(168, 85, 247, 0.4);
-  color: #fff;
+  background: rgba(255, 87, 34, 0.3);
+  color: #ffffff;
 }
 
 body {
   font-family: var(--font-body);
   background-color: var(--bg-deep);
-  color: #ffffff;
+  color: var(--text-primary);
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -31,6 +38,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
+  letter-spacing: -0.02em;
 }
 
 button {
@@ -43,43 +51,24 @@ input {
   font-family: var(--font-body);
 }
 
-/* Custom Cosmic Scrollbar */
+/* Minimalist Dieter Rams Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(168, 85, 247, 0.4);
+  background: var(--braun-amber);
 }
 
-/* Cosmic Glow Keyframes */
-@keyframes nebulaDrift1 {
-  0% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
-  33% { transform: translate(80px, -60px) scale(1.15) rotate(120deg); }
-  66% { transform: translate(-40px, 50px) scale(0.9) rotate(240deg); }
-  100% { transform: translate(0px, 0px) scale(1) rotate(360deg); }
-}
-
-@keyframes nebulaDrift2 {
-  0% { transform: translate(0px, 0px) scale(1.1) rotate(360deg); }
-  33% { transform: translate(-70px, 70px) scale(0.85) rotate(240deg); }
-  66% { transform: translate(50px, -40px) scale(1.2) rotate(120deg); }
-  100% { transform: translate(0px, 0px) scale(1.1) rotate(0deg); }
-}
-
-@keyframes vinylSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes celestialBreathe {
-  0%, 100% { opacity: 0.3; transform: scale(0.98); }
-  50% { opacity: 0.6; transform: scale(1.02); }
+/* Subtle Soundwave Pulse */
+@keyframes braunBarPulse {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
 }
