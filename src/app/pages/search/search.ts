@@ -67,10 +67,9 @@ import { FormsModule } from '@angular/forms';
             [class.is-active-track]="currentTrack()?.id === track.id"
             (click)="selectTrack(track, i)">
             <div class="img-container">
-              <img [src]="track.album.images[0]?.url" 
+              <img [src]="track.album.images[0]?.url || fallbackCover" 
                    class="track-img"
-                   (error)="handleImgError($event)"
-                   (load)="checkSharpness($event)">
+                   (error)="handleImgError($event)">
               
               <!-- Equalizer overlay if playing -->
               <div class="card-eq-overlay" *ngIf="currentTrack()?.id === track.id && isPlaying()">
@@ -430,21 +429,25 @@ export class SearchViewComponent implements OnInit {
     this.store.dispatch(PlayerActions.loadTopTracks());
   }
 
+  readonly fallbackCover = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' fill='%2317181c'><rect width='300' height='300'/><circle cx='150' cy='150' r='90' fill='%231c1e23' stroke='rgba(255,255,255,0.08)' stroke-width='3'/><circle cx='150' cy='150' r='60' fill='%23121316' stroke='rgba(255,255,255,0.05)' stroke-width='2'/><circle cx='150' cy='150' r='30' fill='%23ff5722'/><circle cx='150' cy='150' r='8' fill='%23ffffff'/></svg>";
+
   handleImgError(event: any) {
     const img = event.target;
-    const resolutions = ['maxresdefault.jpg', 'sddefault.jpg', 'hqdefault.jpg', 'mqdefault.jpg'];
-    const currentRes = resolutions.find(r => img.src.includes(r));
-    const nextIdx = resolutions.indexOf(currentRes!) + 1;
-    if (nextIdx < resolutions.length) {
-      img.src = img.src.replace(currentRes!, resolutions[nextIdx]);
-    }
-  }
+    if (!img || img.dataset.fallbackApplied) return;
 
-  checkSharpness(event: any) {
-    const img = event.target;
-    if (img.naturalWidth <= 120) {
-      this.handleImgError(event);
+    const resolutions = ['maxresdefault.jpg', 'sddefault.jpg', 'hqdefault.jpg', 'mqdefault.jpg'];
+    const currentRes = resolutions.find(r => img.src && img.src.includes(r));
+    if (currentRes) {
+      const nextIdx = resolutions.indexOf(currentRes) + 1;
+      if (nextIdx < resolutions.length) {
+        img.src = img.src.replace(currentRes, resolutions[nextIdx]);
+        return;
+      }
     }
+
+    img.dataset.fallbackApplied = 'true';
+    img.onerror = null;
+    img.src = this.fallbackCover;
   }
 
   selectTrack(track: any, index: number) {

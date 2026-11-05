@@ -9,8 +9,8 @@ export class HomeEffects {
   private actions$ = inject(Actions);
   private ytService = inject(YoutubeService);
 
-  // Bumped to v11 to purge cached hero tracks and ensure clean curated home
-  private readonly CACHE_KEY = 'melody_home_cache_v11';
+  // Bumped to v12 to purge broken image cache and load verified studio covers
+  private readonly CACHE_KEY = 'melody_home_cache_v12';
   private readonly CACHE_EXPIRY = 24 * 60 * 60 * 1000;
 
   loadCategorizedMusic$ = createEffect(() =>

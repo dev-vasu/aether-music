@@ -47,10 +47,9 @@ import { CommonModule } from '@angular/common';
         <div class="track-section">
           <div class="art-frame" [class.spinning-art]="isPlaying()" (click)="isExpanded.set(!isExpanded())" title="Click to view recommendations">
             <img *ngIf="track()"
-                 [src]="track().album.images[0]?.url?.replace('sddefault.jpg', 'maxresdefault.jpg')"
+                 [src]="track().album.images[0]?.url || fallbackCover"
                  class="album-art"
-                 (error)="handleImgError($event)"
-                 (load)="checkSharpness($event)">
+                 (error)="handleImgError($event)">
             <div *ngIf="!track()" class="placeholder-art">
               <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
             </div>
@@ -195,10 +194,9 @@ import { CommonModule } from '@angular/common';
             </div>
             <div class="recommendations-scroll">
               <div class="rec-item" *ngFor="let rec of recommendations()" (click)="playRec(rec)">
-                <img [src]="rec.album.images[0]?.url?.replace('sddefault.jpg', 'maxresdefault.jpg')"
+                <img [src]="rec.album.images[0]?.url || fallbackCover"
                      class="rec-art"
-                     (error)="handleImgError($event)"
-                     (load)="checkSharpness($event)">
+                     (error)="handleImgError($event)">
                 <div class="rec-meta">
                   <span class="rec-name">{{ rec.name }}</span>
                   <span class="rec-artist">{{ rec.artists[0]?.name }}</span>
@@ -635,22 +633,25 @@ export class PlayerBarComponent implements OnInit, OnDestroy {
     if (this.timer) clearInterval(this.timer);
   }
 
+  readonly fallbackCover = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' fill='%2317181c'><rect width='300' height='300'/><circle cx='150' cy='150' r='90' fill='%231c1e23' stroke='rgba(255,255,255,0.08)' stroke-width='3'/><circle cx='150' cy='150' r='60' fill='%23121316' stroke='rgba(255,255,255,0.05)' stroke-width='2'/><circle cx='150' cy='150' r='30' fill='%23ff5722'/><circle cx='150' cy='150' r='8' fill='%23ffffff'/></svg>";
+
   handleImgError(event: any) {
     const img = event.target;
-    if (img.src.includes('maxresdefault.jpg')) {
-      img.src = img.src.replace('maxresdefault.jpg', 'sddefault.jpg');
-    } else if (img.src.includes('sddefault.jpg')) {
-      img.src = img.src.replace('sddefault.jpg', 'hqdefault.jpg');
-    } else if (img.src.includes('hqdefault.jpg')) {
-      img.src = img.src.replace('hqdefault.jpg', 'mqdefault.jpg');
-    }
-  }
+    if (!img || img.dataset.fallbackApplied) return;
 
-  checkSharpness(event: any) {
-    const img = event.target;
-    if (img.naturalWidth === 120 && img.src.includes('maxresdefault.jpg')) {
-      img.src = img.src.replace('maxresdefault.jpg', 'sddefault.jpg');
+    const resolutions = ['maxresdefault.jpg', 'sddefault.jpg', 'hqdefault.jpg', 'mqdefault.jpg'];
+    const currentRes = resolutions.find(r => img.src && img.src.includes(r));
+    if (currentRes) {
+      const nextIdx = resolutions.indexOf(currentRes) + 1;
+      if (nextIdx < resolutions.length) {
+        img.src = img.src.replace(currentRes, resolutions[nextIdx]);
+        return;
+      }
     }
+
+    img.dataset.fallbackApplied = 'true';
+    img.onerror = null;
+    img.src = this.fallbackCover;
   }
 
   formatTime(seconds: number): string {

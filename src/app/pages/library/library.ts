@@ -102,10 +102,9 @@ import { selectCurrentTrack, selectIsPlaying } from '../../state/player/player.s
               *ngFor="let track of selectedPlaylist()?.tracks; let i = index"
               [class.is-current]="currentTrack()?.id === track.id">
               <div class="track-num">{{ i + 1 }}</div>
-              <img [src]="track.album.images[0]?.url" 
+              <img [src]="track.album.images[0]?.url || fallbackCover" 
                    class="track-art"
-                   (error)="handleImgError($event)"
-                   (load)="checkSharpness($event)">
+                   (error)="handleImgError($event)">
               <div class="track-meta">
                 <span class="track-name">{{ track.name }}</span>
                 <span class="track-artist">{{ track.artists[0]?.name }}</span>
@@ -290,22 +289,25 @@ export class LibraryViewComponent {
     }
   }
 
+  readonly fallbackCover = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' fill='%2317181c'><rect width='300' height='300'/><circle cx='150' cy='150' r='90' fill='%231c1e23' stroke='rgba(255,255,255,0.08)' stroke-width='3'/><circle cx='150' cy='150' r='60' fill='%23121316' stroke='rgba(255,255,255,0.05)' stroke-width='2'/><circle cx='150' cy='150' r='30' fill='%23ff5722'/><circle cx='150' cy='150' r='8' fill='%23ffffff'/></svg>";
+
   handleImgError(event: any) {
     const img = event.target;
-    if (img.src.includes('maxresdefault.jpg')) {
-      img.src = img.src.replace('maxresdefault.jpg', 'sddefault.jpg');
-    } else if (img.src.includes('sddefault.jpg')) {
-      img.src = img.src.replace('sddefault.jpg', 'hqdefault.jpg');
-    } else if (img.src.includes('hqdefault.jpg')) {
-      img.src = img.src.replace('hqdefault.jpg', 'mqdefault.jpg');
-    }
-  }
+    if (!img || img.dataset.fallbackApplied) return;
 
-  checkSharpness(event: any) {
-    const img = event.target;
-    if (img.naturalWidth === 120 && img.src.includes('maxresdefault.jpg')) {
-      img.src = img.src.replace('maxresdefault.jpg', 'sddefault.jpg');
+    const resolutions = ['maxresdefault.jpg', 'sddefault.jpg', 'hqdefault.jpg', 'mqdefault.jpg'];
+    const currentRes = resolutions.find(r => img.src && img.src.includes(r));
+    if (currentRes) {
+      const nextIdx = resolutions.indexOf(currentRes) + 1;
+      if (nextIdx < resolutions.length) {
+        img.src = img.src.replace(currentRes, resolutions[nextIdx]);
+        return;
+      }
     }
+
+    img.dataset.fallbackApplied = 'true';
+    img.onerror = null;
+    img.src = this.fallbackCover;
   }
 
   removeTrack(trackId: string) {
