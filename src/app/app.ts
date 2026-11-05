@@ -30,6 +30,11 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       <!-- Navigation Dock -->
       <nav class="aurora-nav">
         <div class="glass-dock">
+          <div class="dock-brand">
+            <span class="brand-spark">✦</span>
+            <span class="brand-text">AETHER</span>
+          </div>
+          <div class="dock-separator"></div>
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="dock-link" title="Home">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             <span class="label">Home</span>
@@ -70,7 +75,7 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
         
         <!-- Subtle Credit Footer -->
         <footer class="app-credit">
-          Aether Music &bull; Built with ❤️ by Vasu
+          Aether Music &bull; Cosmic Living Soundscape &bull; Built with ❤️ by Vasu
         </footer>
       </main>
 
@@ -166,7 +171,7 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
 
     .aurora-nav { 
       position: fixed; 
-      top: 32px; 
+      top: 28px; 
       left: 50%; 
       transform: translateX(-50%); 
       z-index: 2000; 
@@ -174,37 +179,71 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
     }
 
     .glass-dock { 
-      background: rgba(255, 255, 255, 0.04); 
-      backdrop-filter: blur(35px); 
-      border: 1px solid rgba(255, 255, 255, 0.08); 
-      padding: 6px; 
-      border-radius: 30px; 
+      background: rgba(15, 15, 25, 0.65); 
+      backdrop-filter: blur(40px); 
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(255, 255, 255, 0.12); 
+      padding: 6px 10px; 
+      border-radius: 40px; 
       display: flex; 
-      gap: 4px; 
-      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.3); 
+      align-items: center;
+      gap: 6px; 
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1); 
+    }
+
+    .dock-brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 10px 0 6px;
+    }
+    .brand-spark {
+      color: #a855f7;
+      font-size: 14px;
+      animation: pulse 2s infinite;
+      text-shadow: 0 0 10px #a855f7;
+    }
+    .brand-text {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #ffffff 40%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .dock-separator {
+      width: 1px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.12);
+      margin: 0 4px;
     }
 
     .dock-link { 
-      height: 44px; 
-      padding: 0 20px; 
+      height: 42px; 
+      padding: 0 18px; 
       display: flex; 
       align-items: center; 
-      gap: 10px; 
+      gap: 8px; 
       border-radius: 24px; 
       color: white; 
       text-decoration: none; 
       opacity: 0.45; 
       transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); 
     }
-    .dock-link svg { width: 20px; height: 20px; fill: currentColor; }
+    .dock-link svg { width: 19px; height: 19px; fill: currentColor; }
     .dock-link .label { font-size: 13px; font-weight: 700; letter-spacing: -0.2px; display: none; }
     .dock-link:hover { opacity: 0.85; background: rgba(255, 255, 255, 0.08); }
-    .dock-link.active { opacity: 1; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3); }
+    .dock-link.active {
+      opacity: 1;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      box-shadow: 0 8px 20px rgba(168, 85, 247, 0.4);
+    }
     .dock-link.active .label { display: block; }
 
     .identity-anchor {
       position: fixed;
-      top: 32px;
+      top: 28px;
       right: 32px;
       z-index: 2000;
       display: flex;
@@ -225,7 +264,7 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       transition: all 0.25s;
     }
     .shortcuts-trigger:hover {
-      background: rgba(168, 85, 247, 0.2);
+      background: rgba(168, 85, 247, 0.25);
       border-color: #a855f7;
       transform: scale(1.1);
     }
@@ -247,10 +286,10 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
     .aurora-btn.mini:hover { transform: scale(1.05); }
 
     .identity-glass {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(15, 15, 25, 0.7);
       backdrop-filter: blur(30px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 6px 14px 6px 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 5px 14px 5px 5px;
       border-radius: 50px;
       display: flex;
       align-items: center;
@@ -258,15 +297,15 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       text-decoration: none;
       color: white;
       transition: all 0.3s;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
-    .identity-active { border-color: #a855f7; box-shadow: 0 0 20px rgba(168, 85, 247, 0.35); }
+    .identity-active { border-color: #a855f7; box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); }
     .user-avatar-wrap {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -277,7 +316,7 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
     .user-meta-wrap { display: flex; flex-direction: column; }
     .u-name { font-size: 12px; font-weight: 800; letter-spacing: -0.2px; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .aurora-content { height: 100%; overflow-y: auto; padding-top: 110px; padding-bottom: 220px; scroll-behavior: smooth; }
+    .aurora-content { height: 100%; overflow-y: auto; padding-top: 100px; padding-bottom: 220px; scroll-behavior: smooth; }
     
     .app-credit {
       text-align: center;
@@ -286,19 +325,19 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 2px;
-      opacity: 0.25;
+      opacity: 0.3;
       color: white;
       transition: opacity 0.3s;
     }
-    .app-credit:hover { opacity: 0.6; }
+    .app-credit:hover { opacity: 0.7; }
 
     .player-float-container {
       position: fixed;
-      bottom: 28px;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
       width: 92%;
-      max-width: 940px;
+      max-width: 960px;
       z-index: 2500;
       transition: all 0.5s ease;
     }
@@ -409,7 +448,7 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       border-radius: 6px;
       padding: 4px 8px;
       font-size: 11px;
-      font-family: monospace;
+      font-family: var(--font-mono);
       color: #c084fc;
     }
 
@@ -417,6 +456,7 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
     @media (max-width: 768px) {
       .aurora-nav { top: auto; bottom: 20px; width: 92%; z-index: 3000; }
       .glass-dock { justify-content: space-around; padding: 8px; border-radius: 25px; }
+      .dock-brand, .dock-separator { display: none; }
       .dock-link { padding: 0 10px; flex-direction: column; gap: 4px; height: auto; opacity: 0.5; }
       .dock-link.active { background: none; box-shadow: none; color: #a855f7; opacity: 1; }
       .dock-link .label { display: block; font-size: 10px; }
@@ -482,7 +522,6 @@ export class App {
       this.toastService.show('-5s Rewind', 'info');
     } else if (event.code === 'KeyM') {
       event.preventDefault();
-      // Mute toggle handled via volume or YT
       this.toastService.show('Mute Toggle (M)', 'info');
     } else if (event.code === 'KeyL') {
       event.preventDefault();

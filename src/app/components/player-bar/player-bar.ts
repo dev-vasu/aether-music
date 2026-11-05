@@ -7,7 +7,8 @@ import {
   selectQueue,
   selectQueueIndex,
   selectIsShuffled,
-  selectRepeatMode
+  selectRepeatMode,
+  selectPlayerColors
 } from '../../state/player/player.selectors';
 import { PlayerActions } from '../../state/player/player.actions';
 import { YoutubeService } from '../../services/youtube.service';
@@ -21,7 +22,9 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="aurora-player" [class.expanded]="isExpanded()">
+    <div class="aurora-player" 
+         [class.expanded]="isExpanded()"
+         [style.boxShadow]="isPlaying() ? '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px ' + colors().primary + '33' : '0 25px 60px rgba(0, 0, 0, 0.7)'">
       <div id="yt-player-container"><div id="yt-player"></div></div>
 
       <!-- PROGRESS BAR -->
@@ -43,7 +46,7 @@ import { CommonModule } from '@angular/common';
       <div class="player-content">
         <!-- Track metadata and artwork -->
         <div class="track-section">
-          <div class="art-frame" (click)="isExpanded.set(!isExpanded())" title="Click to view recommendations">
+          <div class="art-frame" [class.spinning-art]="isPlaying()" (click)="isExpanded.set(!isExpanded())" title="Click to view recommendations">
             <img *ngIf="track()"
                  [src]="track().album.images[0]?.url?.replace('sddefault.jpg', 'maxresdefault.jpg')"
                  class="album-art"
@@ -515,6 +518,7 @@ export class PlayerBarComponent implements OnInit, OnDestroy {
   isShuffled = this.store.selectSignal(selectIsShuffled);
   repeatMode = this.store.selectSignal(selectRepeatMode);
   playlists = this.libraryService.playlists;
+  colors = this.store.selectSignal(selectPlayerColors);
 
   isExpanded = signal(false);
   showPlaylists = signal(false);

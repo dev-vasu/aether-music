@@ -25,6 +25,9 @@
                 "input": "public"
               }
             ],
+            "optimization": {
+              "fonts": false
+            },
             "styles": ["src/styles.css"]
           },
           "configurations": {
