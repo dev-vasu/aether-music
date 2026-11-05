@@ -146,7 +146,16 @@ import { CommonModule } from '@angular/common';
     .catalog-stacks {
       display: flex;
       flex-direction: column;
-      gap: 52px;
+      gap: 48px;
+    }
+    .sound-row {
+      position: relative;
+      padding-bottom: 32px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .sound-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
     }
     .sound-row .sound-meta {
       display: flex;
@@ -235,8 +244,8 @@ import { CommonModule } from '@angular/common';
       overflow: hidden;
       margin-bottom: 12px;
       background: #141518;
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
       transition: all 0.25s ease;
     }
     .track-image {

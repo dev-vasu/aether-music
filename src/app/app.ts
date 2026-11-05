@@ -34,6 +34,9 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
             <span class="braun-dot"></span>
             <span class="brand-text">AETHER</span>
             <span class="brand-sub">AUDIO</span>
+            <div class="hi-fi-pill" title="Audiophile Master Stream &bull; Lossless 24-Bit / 48.0 kHz">
+              <span class="hi-fi-text">LOSSLESS 24-BIT</span>
+            </div>
           </div>
           <div class="dock-separator"></div>
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="dock-link" title="Home">
@@ -220,6 +223,25 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       font-weight: 600;
       letter-spacing: 1.5px;
       color: #9ca3af;
+    }
+    .hi-fi-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      margin-left: 6px;
+      border: 1px solid rgba(255, 87, 34, 0.35);
+      background: rgba(255, 87, 34, 0.08);
+      border-radius: 4px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    .hi-fi-text {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: #ff5722;
+      line-height: 1;
+      white-space: nowrap;
     }
     .dock-separator {
       width: 1px;

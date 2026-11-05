@@ -23,7 +23,9 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <div class="braun-player" 
-         [class.expanded]="isExpanded()">
+         [class.expanded]="isExpanded()"
+         [class.playing]="isPlaying()">
+      <div class="chassis-trim"></div>
       <div id="yt-player-container"><div id="yt-player"></div></div>
 
       <!-- PROGRESS BAR -->
@@ -54,6 +56,9 @@ import { CommonModule } from '@angular/common';
               <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
             </div>
             
+            <!-- Vinyl Micro-Groove Sheen Accent -->
+            <div class="vinyl-sheen" [class.spinning]="isPlaying()"></div>
+
             <!-- Mini Equalizer Overlay on Art -->
             <div class="art-eq" *ngIf="isPlaying()">
               <span class="eq-col"></span>
@@ -152,8 +157,21 @@ import { CommonModule } from '@angular/common';
           </button>
         </div>
 
-        <!-- Right Utility (Volume & Queue expand) -->
+        <!-- Right Utility (Analog VU Meter, Volume & Queue expand) -->
         <div class="utility-section">
+          <!-- Analog Needle VU Meter Visual Accent -->
+          <div class="vu-capsule" title="Analog VU Meter &bull; Live Decibel Output">
+            <div class="vu-dial-face">
+              <span class="vu-scale">-20</span>
+              <span class="vu-scale">0</span>
+              <span class="vu-scale red">+3</span>
+              <div class="vu-needle-pivot">
+                <div class="vu-needle" [class.active]="isPlaying()"></div>
+              </div>
+            </div>
+            <span class="vu-label">VU METER</span>
+          </div>
+
           <!-- Volume Control -->
           <div class="vol-control">
             <button class="vol-btn" (click)="toggleMute()" title="Mute / Unmute (M)">
@@ -234,7 +252,19 @@ import { CommonModule } from '@angular/common';
     </div>
   `,
   styles: [`
+    /* MACHINED TRIM & AMBIENT FILAMENT HEARTH */
+    .chassis-trim {
+      position: absolute;
+      top: 0;
+      left: 12%;
+      right: 12%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 87, 34, 0.45) 20%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 87, 34, 0.45) 80%, transparent);
+      pointer-events: none;
+    }
+
     .braun-player {
+      position: relative;
       background: #17181c;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 20px;
@@ -246,6 +276,9 @@ import { CommonModule } from '@angular/common';
       display: flex;
       flex-direction: column;
       gap: 10px;
+    }
+    .braun-player.playing {
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 35px rgba(255, 87, 34, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
     .braun-player.expanded { border-radius: 24px; padding-bottom: 28px; max-height: 560px; }
 
@@ -295,6 +328,23 @@ import { CommonModule } from '@angular/common';
       flex-shrink: 0;
     }
     .album-art { width: 100%; height: 100%; object-fit: cover; }
+    
+    /* VINYL GROOVE SHEEN ACCENT */
+    .vinyl-sheen {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(255, 255, 255, 0.08) 45%, transparent 50%, rgba(255, 255, 255, 0.05) 65%, transparent 70%);
+      opacity: 0.6;
+    }
+    .vinyl-sheen.spinning {
+      animation: vinylGrooveGlance 8s linear infinite;
+    }
+    @keyframes vinylGrooveGlance {
+      0% { transform: rotate(0deg); opacity: 0.45; }
+      50% { opacity: 0.75; }
+      100% { transform: rotate(360deg); opacity: 0.45; }
+    }
     .placeholder-art { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); }
     .placeholder-art svg { width: 22px; height: 22px; fill: rgba(255,255,255,0.4); }
 
@@ -477,8 +527,87 @@ import { CommonModule } from '@angular/common';
       margin-top: 3px;
     }
 
+    /* ANALOG VU METER ACCENT */
+    .vu-capsule {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 3px 6px;
+      background: #141518;
+      border: 1px solid rgba(255, 87, 34, 0.25);
+      border-radius: 6px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+      user-select: none;
+    }
+    .vu-dial-face {
+      width: 58px;
+      height: 22px;
+      background: radial-gradient(circle at 50% 120%, rgba(255, 87, 34, 0.2) 0%, #171512 85%);
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 4px 0 4px;
+    }
+    .vu-scale {
+      font-family: var(--font-mono);
+      font-size: 7.5px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.45);
+      line-height: 1;
+    }
+    .vu-scale.red {
+      color: #ef4444;
+    }
+    .vu-needle-pivot {
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #2b251f;
+      border: 1px solid rgba(255, 87, 34, 0.4);
+    }
+    .vu-needle {
+      position: absolute;
+      bottom: 6px;
+      left: 5px;
+      width: 1.5px;
+      height: 20px;
+      background: #ff5722;
+      border-radius: 1px;
+      transform-origin: bottom center;
+      transform: rotate(-28deg);
+      transition: transform 0.4s ease;
+      box-shadow: 0 0 4px rgba(255, 87, 34, 0.85);
+    }
+    .vu-needle.active {
+      animation: needleVibe 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    @keyframes needleVibe {
+      0% { transform: rotate(-28deg); }
+      20% { transform: rotate(14deg); }
+      40% { transform: rotate(-8deg); }
+      60% { transform: rotate(22deg); }
+      80% { transform: rotate(4deg); }
+      100% { transform: rotate(-28deg); }
+    }
+    .vu-label {
+      font-family: var(--font-mono);
+      font-size: 7px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: #ff5722;
+      opacity: 0.9;
+      line-height: 1;
+    }
+
     /* UTILITY SECTION */
-    .utility-section { width: 26%; display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+    .utility-section { width: 28%; display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
     .vol-control { display: flex; align-items: center; gap: 8px; }
     .vol-btn { background: none; border: none; padding: 4px; cursor: pointer; display: flex; align-items: center; color: #9ca3af; }
     .vol-icon { width: 17px; height: 17px; fill: currentColor; }
