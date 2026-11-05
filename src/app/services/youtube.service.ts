@@ -4,10 +4,10 @@ import { environment } from '../../environments/environment';
 declare var YT: any;
 
 export interface SearchOptions {
-    useCache?: boolean;
-    isUserSearch?: boolean;
-    type?: 'video' | 'playlist';
-    maxResults?: number;
+  useCache?: boolean;
+  isUserSearch?: boolean;
+  type?: 'video' | 'playlist';
+  maxResults?: number;
 }
 
 @Injectable({
@@ -21,6 +21,7 @@ export class YoutubeService {
   // Public for debugging
   public activeKeyHint = signal<string>('N/A');
   private useBackupKey = false;
+  private previewAudio: HTMLAudioElement | null = null;
 
   constructor() {
     this.loadApi();
@@ -32,8 +33,8 @@ export class YoutubeService {
     }
 
     if ((window as any).YT && (window as any).YT.Player) {
-        this.isPlayerReady.set(true);
-        return;
+      this.isPlayerReady.set(true);
+      return;
     }
 
     const tag = document.createElement('script');
@@ -70,21 +71,104 @@ export class YoutubeService {
     }
   }
 
-  playVideo(videoId: string) {
-    if (this.player && this.player.loadVideoById) {
+  async playVideo(trackOrId: any) {
+    let videoId = typeof trackOrId === 'string' ? trackOrId : trackOrId?.id;
+    const track = typeof trackOrId === 'object' ? trackOrId : null;
+
+    // Check if we need to resolve a YouTube ID for an iTunes official song
+    if (!videoId || videoId.startsWith('itunes_') || videoId.length !== 11) {
+      const q = track ? `${track.artists?.[0]?.name || ''} ${track.name}` : videoId;
+      
+      // Start instantaneous preview playback for 0ms latency
+      if (track?.previewUrl && typeof window !== 'undefined') {
+        this.playPreviewAudio(track.previewUrl);
+      }
+
+      try {
+        const res = await fetch(`/api/resolve?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.id) {
+            videoId = json.id;
+          }
+        }
+      } catch (err) {
+        console.warn('Resolution notice:', err);
+      }
+    }
+
+    if (this.player && this.player.loadVideoById && videoId && videoId.length === 11) {
+      this.stopPreviewAudio();
       this.player.loadVideoById(videoId);
       this.player.unMute();
       this.player.playVideo();
     }
   }
 
-  unMute() { if (this.player && this.player.unMute) this.player.unMute(); }
-  pause() { if (this.player && this.player.pauseVideo) this.player.pauseVideo(); }
-  resume() { if (this.player && this.player.playVideo) { this.player.unMute(); this.player.playVideo(); } }
-  setVolume(volume: number) { if (this.player && this.player.setVolume) { this.player.unMute(); this.player.setVolume(volume); } }
-  getCurrentTime() { return (this.player && this.player.getCurrentTime) ? this.player.getCurrentTime() : 0; }
-  getDuration() { return (this.player && this.player.getDuration) ? this.player.getDuration() : 0; }
-  seekTo(seconds: number) { if (this.player && this.player.seekTo) this.player.seekTo(seconds, true); }
+  playPreviewAudio(url: string) {
+    if (typeof window === 'undefined') return;
+    this.stopPreviewAudio();
+    try {
+      this.previewAudio = new Audio(url);
+      this.previewAudio.play().catch(() => {});
+    } catch {}
+  }
+
+  stopPreviewAudio() {
+    if (this.previewAudio) {
+      try {
+        this.previewAudio.pause();
+        this.previewAudio = null;
+      } catch {}
+    }
+  }
+
+  unMute() {
+    if (this.player && this.player.unMute) this.player.unMute();
+    if (this.previewAudio) this.previewAudio.muted = false;
+  }
+
+  pause() {
+    if (this.player && this.player.pauseVideo) this.player.pauseVideo();
+    if (this.previewAudio) this.previewAudio.pause();
+  }
+
+  resume() {
+    if (this.player && this.player.playVideo) {
+      this.player.unMute();
+      this.player.playVideo();
+    }
+    if (this.previewAudio) this.previewAudio.play().catch(() => {});
+  }
+
+  setVolume(volume: number) {
+    if (this.player && this.player.setVolume) {
+      this.player.unMute();
+      this.player.setVolume(volume);
+    }
+    if (this.previewAudio) this.previewAudio.volume = Math.max(0, Math.min(1, volume / 100));
+  }
+
+  getCurrentTime() {
+    if (this.previewAudio && !this.previewAudio.paused) {
+      return this.previewAudio.currentTime;
+    }
+    return (this.player && this.player.getCurrentTime) ? this.player.getCurrentTime() : 0;
+  }
+
+  getDuration() {
+    if (this.previewAudio && !this.previewAudio.paused && this.previewAudio.duration) {
+      return this.previewAudio.duration;
+    }
+    return (this.player && this.player.getDuration) ? this.player.getDuration() : 0;
+  }
+
+  seekTo(seconds: number) {
+    if (this.previewAudio && !this.previewAudio.paused) {
+      this.previewAudio.currentTime = seconds;
+    }
+    if (this.player && this.player.seekTo) this.player.seekTo(seconds, true);
+  }
 
   async searchMusic(query: string, options: SearchOptions = {}): Promise<any[]> {
     this.apiError.set(null);
@@ -104,7 +188,7 @@ export class YoutubeService {
       }
     }
 
-    // 1. Try our unified serverless endpoint /api/search (available on Vercel deployment)
+    // 1. Try our official iTunes-powered unified serverless endpoint /api/search
     try {
       const apiEndpoint = `/api/search?q=${encodeURIComponent(query)}&limit=${maxResults}`;
       const response = await fetch(apiEndpoint);
@@ -120,27 +204,10 @@ export class YoutubeService {
         }
       }
     } catch {
-      // Serverless API not available (e.g. offline, local dev without proxy)
+      // Serverless API not available
     }
 
-    // 2. Try direct Google YouTube Data API v3 if keys are available
-    if (this.useBackupKey && (environment as any).youtubeApiKeyBackup) {
-      const res = await this.executeSearch(query, options, true);
-      if (res && res.length > 0) return res;
-    }
-
-    let tracks = await this.executeSearch(query, options, false);
-    
-    if (tracks === null && (environment as any).youtubeApiKeyBackup) {
-      this.useBackupKey = true;
-      tracks = await this.executeSearch(query, options, true);
-    }
-
-    if (tracks && tracks.length > 0) {
-      return tracks;
-    }
-
-    // 3. Fallback to rich curated cosmic database with smart query filtering
+    // 2. Fallback to rich curated cosmic database with smart query filtering
     const curated = this.getCuratedMockData();
     const qLower = query.toLowerCase().trim();
     const allCurated = Object.values(curated).flat();
@@ -151,138 +218,61 @@ export class YoutubeService {
         t.artists.some((a: any) => a.name.toLowerCase().includes(qLower))
       );
       if (matches.length > 0) return matches;
-      // If user typed something not matched, return a vibrant mix of trending tracks
       return [...curated.trending, ...curated.instaViral];
     }
 
     return curated.trending;
   }
 
-  private async executeSearch(query: string, options: SearchOptions, useBackup: boolean): Promise<any[] | null> {
-    const { isUserSearch = false, maxResults = 15 } = options;
-    const apiKey = useBackup ? (environment as any).youtubeApiKeyBackup : environment.youtubeApiKey;
-    const engineName = useBackup ? 'BACKUP' : 'PRIMARY';
-    
-    // Update debug hint (first 3 chars)
-    if (apiKey) this.activeKeyHint.set(apiKey.substring(0, 3));
-
-    // Better Placeholder Check
-    if (!apiKey || apiKey === 'V_PRIMARY_KEY' || apiKey === 'V_BACKUP_KEY' || apiKey === 'REPLACED_BY_VERCEL' || apiKey === 'YOUR_LOCAL_KEY_HERE') {
-      return null; // Return null to trigger fallback
-    }
-
-    let refinedQuery = query;
-    if (!isUserSearch && !query.toLowerCase().includes('official audio')) {
-      refinedQuery = `${query} official audio -mashup -bhojpuri -khesari -pawan -haryanvi`;
-    }
-
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=${maxResults}&q=${encodeURIComponent(refinedQuery)}&type=video&key=${apiKey}`;
-    
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      if (data.error) {
-        const reason = data.error.errors?.[0]?.reason;
-        if (reason === 'quotaExceeded' || reason === 'accessNotConfigured' || reason === 'forbidden' || reason === 'keyInvalid') {
-          return null; 
-        }
-        return [];
-      }
-      
-      const blacklistedArtists = ['khesari', 'pawan singh', 'bhojpuri', 'haryanvi', 'sapna choudhary', 'shilpi raj', 'ritesh pandey', 'pramod premi', 'hits', 'billboard', 'top 100'];
-      
-      const tracks = (data.items || [])
-        .filter((item: any) => {
-          if (!item.id?.videoId) return false;
-          if (!isUserSearch) {
-            const title = item.snippet.title.toLowerCase();
-            const channel = item.snippet.channelTitle.toLowerCase();
-            if (blacklistedArtists.some(artist => title.includes(artist) || channel.includes(artist))) return false;
-            if (title.includes('mashup') || title.includes('jukebox') || title.includes('nonstop') || title.includes('compilation') || title.includes('hits')) return false;
-          }
-          return true;
-        })
-        .map((item: any) => {
-          const clean = (text: string) => text.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').replace(/\|.*/g, '').trim();
-          const getThumb = (id: string) => `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
-          return {
-            id: item.id.videoId,
-            name: clean(item.snippet.title),
-            artists: [{ name: item.snippet.channelTitle.replace(' - Topic', '') }],
-            album: { images: [{ url: getThumb(item.id.videoId) }] }
-          };
-        });
-
-      if (options.useCache && typeof localStorage !== 'undefined') {
-        try {
-          localStorage.setItem(`melody_cache_${query}`, JSON.stringify({ timestamp: Date.now(), data: tracks }));
-        } catch {}
-      }
-      return tracks;
-    } catch (e) {
-      console.error(`Network Error [${engineName}]:`, e);
-      return [];
-    }
-  }
-
   getCuratedMockData() {
-    const getUrl = (id: string) => `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
     return {
       trending: [
-        { id: 'PfH7jq_uSCM', name: 'Die With A Smile', artists: [{ name: 'Lady Gaga & Bruno Mars' }], album: { images: [{ url: getUrl('PfH7jq_uSCM') }] } },
-        { id: 'fHI8X4OXluQ', name: 'Blinding Lights', artists: [{ name: 'The Weeknd' }], album: { images: [{ url: getUrl('fHI8X4OXluQ') }] } },
-        { id: 'L0X03zR0rQk', name: 'Levitating', artists: [{ name: 'Dua Lipa' }], album: { images: [{ url: getUrl('L0X03zR0rQk') }] } },
-        { id: 'kJQP7kiw5Fk', name: 'Despacito', artists: [{ name: 'Luis Fonsi' }], album: { images: [{ url: getUrl('kJQP7kiw5Fk') }] } },
-        { id: 'hT_nvWreIhg', name: 'One Dance', artists: [{ name: 'Drake' }], album: { images: [{ url: getUrl('hT_nvWreIhg') }] } },
-        { id: 'yKNxeF4KMsY', name: 'Yellow', artists: [{ name: 'Coldplay' }], album: { images: [{ url: getUrl('yKNxeF4KMsY') }] } },
-        { id: '4NRXx6U8ABQ', name: 'Starboy', artists: [{ name: 'The Weeknd' }], album: { images: [{ url: getUrl('4NRXx6U8ABQ') }] } },
-        { id: 'JGwWNGJdvx8', name: 'Shape of You', artists: [{ name: 'Ed Sheeran' }], album: { images: [{ url: getUrl('JGwWNGJdvx8') }] } }
-      ],
-      instaViral: [
-        { id: 'vA8O09P5_zo', name: 'Metamorphosis', artists: [{ name: 'INTERWORLD' }], album: { images: [{ url: getUrl('vA8O09P5_zo') }] } },
-        { id: 'u_p0nN1FvRE', name: 'Midnight', artists: [{ name: 'PLAYAMANE' }], album: { images: [{ url: getUrl('u_p0nN1FvRE') }] } },
-        { id: 'rUf7yC_zJ-U', name: 'Sahara', artists: [{ name: 'Hensonn' }], album: { images: [{ url: getUrl('rUf7yC_zJ-U') }] } },
-        { id: 'mU_E3n9q7iY', name: 'Murder In My Mind', artists: [{ name: 'Kordhell' }], album: { images: [{ url: getUrl('mU_E3n9q7iY') }] } },
-        { id: '6Dh-RL__uN4', name: 'Close Eyes', artists: [{ name: 'DVRST' }], album: { images: [{ url: getUrl('6Dh-RL__uN4') }] } },
-        { id: 'Y848B0u_uEU', name: 'AVOID ME', artists: [{ name: 'KUTE' }], album: { images: [{ url: getUrl('Y848B0u_uEU') }] } },
-        { id: 'w-sQRS-Um98', name: 'Why Not', artists: [{ name: 'Ghostface Playa' }], album: { images: [{ url: getUrl('w-sQRS-Um98') }] } }
+        { id: 'PfH7jq_uSCM', name: 'Die With A Smile', artists: [{ name: 'Lady Gaga & Bruno Mars' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/11/ae/f2/11aef294-f57c-bab9-c9fc-529162984e62/24UMGIM85348.rgb.jpg/600x600bb.jpg' }] } },
+        { id: 'fHI8X4OXluQ', name: 'Blinding Lights', artists: [{ name: 'The Weeknd' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/6f/bc/e6/6fbce6c4-c38c-72d8-4fd0-66cfff32f679/20UMGIM12176.rgb.jpg/600x600bb.jpg' }] } },
+        { id: 'L0X03zR0rQk', name: 'Levitating', artists: [{ name: 'Dua Lipa' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/c3/65/5d/c3655d88-8422-92a0-4ff6-99cf16c7f893/190295286101.jpg/600x600bb.jpg' }] } },
+        { id: 'kJQP7kiw5Fk', name: 'Despacito', artists: [{ name: 'Luis Fonsi' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/05/cf/43/05cf43fa-0941-0dc5-a92c-e3a5cb48ef4e/00602557672522.rgb.jpg/600x600bb.jpg' }] } },
+        { id: 'hT_nvWreIhg', name: 'One Dance', artists: [{ name: 'Drake' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/2e/f1/87/2ef1879c-7e28-1ef9-813c-0e86b2067746/00602547940259.rgb.jpg/600x600bb.jpg' }] } },
+        { id: 'yKNxeF4KMsY', name: 'Yellow', artists: [{ name: 'Coldplay' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/48/2e/0e/482e0e0f-90be-d67b-117d-2b4cf6179069/0724352778351_1400.jpg/600x600bb.jpg' }] } },
+        { id: '4NRXx6U8ABQ', name: 'Starboy', artists: [{ name: 'The Weeknd' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/09/a4/0c/09a40c6c-9dd6-0397-400e-26fce7c0f1b2/16UMGIM56475.rgb.jpg/600x600bb.jpg' }] } },
+        { id: 'JGwWNGJdvx8', name: 'Shape of You', artists: [{ name: 'Ed Sheeran' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/bf/25/7f/bf257f86-cf26-e41c-ffc7-fb1ff993e35a/190295851286.jpg/600x600bb.jpg' }] } }
       ],
       hindi: [
-        { id: 'BddP6PYo2gs', name: 'Kesariya', artists: [{ name: 'Arijit Singh & Pritam' }], album: { images: [{ url: getUrl('BddP6PYo2gs') }] } },
-        { id: 'h7GyfX_68T8', name: 'Raataan Lambiyan', artists: [{ name: 'Jubin Nautiyal' }], album: { images: [{ url: getUrl('h7GyfX_68T8') }] } },
-        { id: 'YxWlaYCA8MU', name: 'Tum Hi Ho', artists: [{ name: 'Arijit Singh' }], album: { images: [{ url: getUrl('YxWlaYCA8MU') }] } },
-        { id: 'ElZfdU54Cp8', name: 'Apna Bana Le', artists: [{ name: 'Arijit Singh & Sachin-Jigar' }], album: { images: [{ url: getUrl('ElZfdU54Cp8') }] } },
-        { id: 'V7LwfY5U5WI', name: 'Chaleya', artists: [{ name: 'Arijit Singh & Anirudh' }], album: { images: [{ url: getUrl('V7LwfY5U5WI') }] } },
-        { id: 'RLzC55ai0eo', name: 'Heeriye', artists: [{ name: 'Jasleen Royal & Arijit Singh' }], album: { images: [{ url: getUrl('RLzC55ai0eo') }] } },
-        { id: '6MgsHSAcI98', name: 'Tum Se Hi', artists: [{ name: 'Mohit Chauhan' }], album: { images: [{ url: getUrl('6MgsHSAcI98') }] } }
+        { id: 'BddP6PYo2gs', name: 'Kesariya', artists: [{ name: 'Arijit Singh & Pritam' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/9f/13/ca/9f13ca3b-e533-03e0-f19a-f0aaa774581d/196589311191.jpg/600x600bb.jpg' }] } },
+        { id: 'h7GyfX_68T8', name: 'Raataan Lambiyan', artists: [{ name: 'Jubin Nautiyal' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/2b/ef/c7/2befc7d0-1cfa-7c9b-ae7c-d3beec3c21a1/8902894360340.jpg/600x600bb.jpg' }] } },
+        { id: 'YxWlaYCA8MU', name: 'Tum Hi Ho', artists: [{ name: 'Arijit Singh' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/28/67/68/286768ec-3162-d278-f32a-592f6b3cfc73/8902894354028.jpg/600x600bb.jpg' }] } },
+        { id: 'ElZfdU54Cp8', name: 'Apna Bana Le', artists: [{ name: 'Arijit Singh & Sachin-Jigar' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/64/00/6f/64006f1d-ee25-cb28-66ea-576f621142dc/196589578136.jpg/600x600bb.jpg' }] } },
+        { id: 'V7LwfY5U5WI', name: 'Chaleya', artists: [{ name: 'Arijit Singh & Anirudh' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/8e/3c/6f/8e3c6f4e-2895-ec58-1549-fb5ffea7a2d4/859754160498_cover.jpg/600x600bb.jpg' }] } },
+        { id: 'RLzC55ai0eo', name: 'Heeriye', artists: [{ name: 'Jasleen Royal & Arijit Singh' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/c2/f7/a2/c2f7a220-feef-eb83-e18e-49bca0217ec2/197189033322.jpg/600x600bb.jpg' }] } },
+        { id: '6MgsHSAcI98', name: 'Tum Se Hi', artists: [{ name: 'Mohit Chauhan' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/06/f0/a5/06f0a5fb-3914-7221-50e5-79776f849a62/8902894350129.jpg/600x600bb.jpg' }] } }
       ],
       english: [
-        { id: 'yJg-Y5byMMw', name: 'As It Was', artists: [{ name: 'Harry Styles' }], album: { images: [{ url: getUrl('yJg-Y5byMMw') }] } },
-        { id: 'TUVcZfQe-Kw', name: 'Flowers', artists: [{ name: 'Miley Cyrus' }], album: { images: [{ url: getUrl('TUVcZfQe-Kw') }] } },
-        { id: 'UnyLqlfe_3U', name: 'Starboy', artists: [{ name: 'The Weeknd' }], album: { images: [{ url: getUrl('UnyLqlfe_3U') }] } },
-        { id: '0Vw-P_yA8Fk', name: 'Circles', artists: [{ name: 'Post Malone' }], album: { images: [{ url: getUrl('0Vw-P_yA8Fk') }] } },
-        { id: '7ysFgElQtjI', name: 'Birds of a Feather', artists: [{ name: 'Billie Eilish' }], album: { images: [{ url: getUrl('7ysFgElQtjI') }] } },
-        { id: '2Vv-BfVoq4g', name: 'Perfect', artists: [{ name: 'Ed Sheeran' }], album: { images: [{ url: getUrl('2Vv-BfVoq4g') }] } },
-        { id: 'CevxZvSJLk8', name: 'Roar', artists: [{ name: 'Katy Perry' }], album: { images: [{ url: getUrl('CevxZvSJLk8') }] } }
+        { id: 'yJg-Y5byMMw', name: 'As It Was', artists: [{ name: 'Harry Styles' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/c5/4b/31/c54b31a3-2d57-3f8d-4f15-373d58ef8a94/196589031129.jpg/600x600bb.jpg' }] } },
+        { id: 'TUVcZfQe-Kw', name: 'Flowers', artists: [{ name: 'Miley Cyrus' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/b9/be/ba/b9beba85-f1c9-7df9-6b54-fc94a02be042/196589781666.jpg/600x600bb.jpg' }] } },
+        { id: '0Vw-P_yA8Fk', name: 'Circles', artists: [{ name: 'Post Malone' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/7e/3e/d6/7e3ed6eb-9566-5085-3bc4-f31627c2f0f4/19UMGIM81561.rgb.jpg/600x600bb.jpg' }] } },
+        { id: '7ysFgElQtjI', name: 'Birds of a Feather', artists: [{ name: 'Billie Eilish' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/21/df/f2/21dff225-78e7-ff1b-05b0-2b102ce85c5c/24UMGIM35308.rgb.jpg/600x600bb.jpg' }] } },
+        { id: '2Vv-BfVoq4g', name: 'Perfect', artists: [{ name: 'Ed Sheeran' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/bf/25/7f/bf257f86-cf26-e41c-ffc7-fb1ff993e35a/190295851286.jpg/600x600bb.jpg' }] } }
       ],
       punjabi: [
-        { id: 'cl0a3i2wDzQ', name: '295', artists: [{ name: 'Sidhu Moose Wala' }], album: { images: [{ url: getUrl('cl0a3i2wDzQ') }] } },
-        { id: 'vX2cDW8LUWk', name: 'Proper Patola', artists: [{ name: 'Diljit Dosanjh' }], album: { images: [{ url: getUrl('vX2cDW8LUWk') }] } },
-        { id: 'vL_Nn9KxV-Y', name: 'Excuses', artists: [{ name: 'AP Dhillon' }], album: { images: [{ url: getUrl('vL_Nn9KxV-Y') }] } },
-        { id: 'dCmp56tSSmA', name: 'Brown Munde', artists: [{ name: 'AP Dhillon & Gurinder Gill' }], album: { images: [{ url: getUrl('dCmp56tSSmA') }] } },
-        { id: 'xR3V5Os4-Ag', name: 'With You', artists: [{ name: 'AP Dhillon' }], album: { images: [{ url: getUrl('xR3V5Os4-Ag') }] } },
-        { id: 'E07s5ZYygmg', name: 'Softly', artists: [{ name: 'Karan Aujla' }], album: { images: [{ url: getUrl('E07s5ZYygmg') }] } },
-        { id: '3xkxA_f-jpc', name: 'Lover', artists: [{ name: 'Diljit Dosanjh' }], album: { images: [{ url: getUrl('3xkxA_f-jpc') }] } }
+        { id: 'cl0a3i2wDzQ', name: '295', artists: [{ name: 'Sidhu Moose Wala' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/8e/3c/6f/8e3c6f4e-2895-ec58-1549-fb5ffea7a2d4/859754160498_cover.jpg/600x600bb.jpg' }] } },
+        { id: '3xkxA_f-jpc', name: 'Lover', artists: [{ name: 'Diljit Dosanjh' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/8a/89/e4/8a89e445-d2c6-f8ac-a828-27818b0c1afe/859749638209_cover.jpg/600x600bb.jpg' }] } },
+        { id: 'vX2cDW8LUWk', name: 'Proper Patola', artists: [{ name: 'Diljit Dosanjh' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music6/v4/f7/a7/67/f7a7674d-c12e-13c5-f855-6e5a40b92395/8902894356022.jpg/600x600bb.jpg' }] } },
+        { id: 'dCmp56tSSmA', name: 'Brown Munde', artists: [{ name: 'AP Dhillon & Gurinder Gill' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/83/c9/48/83c94806-ea78-ba61-ec46-5e263d91653e/859742467363_cover.jpg/600x600bb.jpg' }] } },
+        { id: 'E07s5ZYygmg', name: 'Softly', artists: [{ name: 'Karan Aujla' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/cb/aa/24/cbaa247c-783b-e448-f58c-bb0f339cf0c9/197189196324.jpg/600x600bb.jpg' }] } }
+      ],
+      instaViral: [
+        { id: 'vA8O09P5_zo', name: 'Metamorphosis', artists: [{ name: 'INTERWORLD' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/85/6f/52/856f5223-2895-c9fc-0777-a8fe8b108253/196626574718.jpg/600x600bb.jpg' }] } },
+        { id: 'u_p0nN1FvRE', name: 'Midnight', artists: [{ name: 'PLAYAMANE' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/4a/1c/ca/4a1cca9c-ce1a-a068-12c5-7f9cf0f69a5e/196925574718.jpg/600x600bb.jpg' }] } },
+        { id: 'rUf7yC_zJ-U', name: 'Sahara', artists: [{ name: 'Hensonn' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/19/52/a9/1952a975-f716-e42a-a92c-e3a5cb48ef4e/196626359551.jpg/600x600bb.jpg' }] } },
+        { id: 'mU_E3n9q7iY', name: 'Murder In My Mind', artists: [{ name: 'Kordhell' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/f6/d8/1b/f6d81bc8-52ae-51fa-ef36-c0d1c47ea4e4/5056495449767.1.jpg/600x600bb.jpg' }] } },
+        { id: '6Dh-RL__uN4', name: 'Close Eyes', artists: [{ name: 'DVRST' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/c3/91/9f/c3919f44-8d48-7019-f55a-e713589b4334/196292552880.jpg/600x600bb.jpg' }] } }
       ],
       devotional: [
-        { id: '5Eqb_-j3FDA', name: 'Pasoori', artists: [{ name: 'Ali Sethi & Shae Gill' }], album: { images: [{ url: getUrl('5Eqb_-j3FDA') }] } },
-        { id: '7d_hL0T3mDk', name: 'Tu Jhoom', artists: [{ name: 'Abida Parveen & Naseebo Lal' }], album: { images: [{ url: getUrl('7d_hL0T3mDk') }] } },
-        { id: '0_C_T3U8k5k', name: 'Afreen Afreen', artists: [{ name: 'Rahat Fateh Ali Khan & Momina' }], album: { images: [{ url: getUrl('0_C_T3U8k5k') }] } },
-        { id: 'ibpA4e6Lg4g', name: 'Kun Faya Kun', artists: [{ name: 'A.R. Rahman & Javed Ali' }], album: { images: [{ url: getUrl('ibpA4e6Lg4g') }] } },
-        { id: 'A0pLe-f9EHA', name: 'Hanuman Chalisa', artists: [{ name: 'Hariharan' }], album: { images: [{ url: getUrl('A0pLe-f9EHA') }] } },
-        { id: 'G-7U-m7P78E', name: 'Achutam Keshavan', artists: [{ name: 'Shreya Ghoshal' }], album: { images: [{ url: getUrl('G-7U-m7P78E') }] } },
-        { id: 'kJ_mS35xXmY', name: 'Shiv Tandav', artists: [{ name: 'Sachet Tandon' }], album: { images: [{ url: getUrl('kJ_mS35xXmY') }] } }
+        { id: 'Hy55Ij78amM', name: 'Ramayan', artists: [{ name: 'Jagjit Singh' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/10/98/8d/10988d3c-a1a7-ee3e-38b8-ac0d7fc3f021/8901854013258.jpg/600x600bb.jpg' }] } },
+        { id: '5Eqb_-j3FDA', name: 'Pasoori', artists: [{ name: 'Ali Sethi & Shae Gill' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a5/d8/4a/a5d84a77-33e1-e1cb-a034-782163b78f44/196626359551.jpg/600x600bb.jpg' }] } },
+        { id: '7d_hL0T3mDk', name: 'Tu Jhoom', artists: [{ name: 'Abida Parveen & Naseebo Lal' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/e5/ee/3f/e5ee3fc7-ce16-c77c-a495-2015fa1dbe2a/196626574718.jpg/600x600bb.jpg' }] } },
+        { id: '0_C_T3U8k5k', name: 'Afreen Afreen', artists: [{ name: 'Rahat Fateh Ali Khan & Momina' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music62/v4/e0/75/ca/e075caa9-79c2-ad7a-f604-0ee2169eb74b/886446115982.jpg/600x600bb.jpg' }] } },
+        { id: 'ibpA4e6Lg4g', name: 'Kun Faya Kun', artists: [{ name: 'A.R. Rahman & Javed Ali' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/6b/c4/86/6bc486fa-ec66-a496-c4e9-11ba107b32c6/8902894353458.jpg/600x600bb.jpg' }] } },
+        { id: 'A0pLe-f9EHA', name: 'Hanuman Chalisa', artists: [{ name: 'Hariharan' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/82/12/a1/8212a106-7074-ba4f-2307-4597e035eba9/8902633118553.jpg/600x600bb.jpg' }] } }
       ]
     };
   }

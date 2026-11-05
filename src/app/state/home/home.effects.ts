@@ -9,8 +9,8 @@ export class HomeEffects {
   private actions$ = inject(Actions);
   private ytService = inject(YoutubeService);
 
-  // Bumped to v9 to purge old cached mashups and unlicensed compilations from users' browsers
-  private readonly CACHE_KEY = 'melody_home_cache_v9';
+  // Bumped to v10 to purge old cached mashups and use pristine official 1:1 square studio album art
+  private readonly CACHE_KEY = 'melody_home_cache_v10';
   private readonly CACHE_EXPIRY = 24 * 60 * 60 * 1000;
 
   loadCategorizedMusic$ = createEffect(() =>
@@ -21,12 +21,12 @@ export class HomeEffects {
         if (cachedData) return of(HomeActions.loadCategorizedMusicSuccess(cachedData));
 
         return forkJoin({
-          trending: this.ytService.searchMusic('The Weeknd Bruno Mars Dua Lipa official audio', { useCache: true }),
-          hindi: this.ytService.searchMusic('Arijit Singh Pritam official audio', { useCache: true }),
-          english: this.ytService.searchMusic('Taylor Swift Billie Eilish official music video', { useCache: true }),
-          punjabi: this.ytService.searchMusic('Diljit Dosanjh Karan Aujla official audio', { useCache: true }),
-          instaViral: this.ytService.searchMusic('INTERWORLD Kordhell phonk official audio', { useCache: true }),
-          devotional: this.ytService.searchMusic('Coke Studio Pakistan official audio', { useCache: true })
+          trending: this.ytService.searchMusic('Lady Gaga Bruno Mars The Weeknd', { useCache: true }),
+          hindi: this.ytService.searchMusic('Arijit Singh Pritam', { useCache: true }),
+          english: this.ytService.searchMusic('Taylor Swift Billie Eilish', { useCache: true }),
+          punjabi: this.ytService.searchMusic('Diljit Dosanjh Karan Aujla', { useCache: true }),
+          instaViral: this.ytService.searchMusic('INTERWORLD Kordhell Phonk', { useCache: true }),
+          devotional: this.ytService.searchMusic('Jagjit Singh Ramayan Hariharan', { useCache: true })
         }).pipe(
           map(results => {
             const filterRowUnique = (tracks: any[]) => {
@@ -49,7 +49,6 @@ export class HomeEffects {
             const instaTracks = filterRowUnique(results.instaViral);
             const devotionalTracks = filterRowUnique(results.devotional);
 
-            // Guarantee that authentic original tracks from curated are prioritized/merged
             const finalized = {
               trending: trendingTracks.length >= 4 ? trendingTracks : curated.trending,
               hindi: hindiTracks.length >= 4 ? hindiTracks : curated.hindi,

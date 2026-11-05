@@ -553,7 +553,7 @@ export class PlayerBarComponent implements OnInit, OnDestroy {
           this.toast.show('Trial Echoes: Sign in to enjoy limitless cosmic music!', 'warning');
         }
         this.lastPlayedId = t.id;
-        this.ytService.playVideo(t.id);
+        this.ytService.playVideo(t);
         if (this.authService.getToken()) {
           this.authService.incrementTrackCount();
         } else {

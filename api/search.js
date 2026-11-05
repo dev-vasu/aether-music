@@ -1,5 +1,92 @@
 const https = require('https');
 
+function fetchJson(url) {
+  return new Promise((resolve) => {
+    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch {
+          resolve(null);
+        }
+      });
+    }).on('error', () => resolve(null));
+  });
+}
+
+function resolveYoutubeId(query) {
+  return new Promise((resolve) => {
+    const refinedQuery = `${query} official audio`;
+    const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(refinedQuery)}`;
+
+    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const match = data.match(/"videoId":"([a-zA-Z0-9_-]{11})"/);
+          if (match && match[1]) {
+            return resolve(match[1]);
+          }
+        } catch {}
+        resolve(null);
+      });
+    }).on('error', () => resolve(null));
+  });
+}
+
+async function searchItunes(query, limit = 15) {
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=${limit}`;
+  const data = await fetchJson(url);
+  if (!data || !data.results || data.results.length === 0) {
+    return [];
+  }
+
+  const tracks = [];
+  const seen = new Set();
+
+  for (const item of data.results) {
+    if (item.wrapperType !== 'track' || item.kind !== 'song') continue;
+    const key = (item.trackName + ' ' + item.artistName).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    // Upgrade to 600x600 high definition square studio album cover
+    const art = (item.artworkUrl100 || '').replace('100x100bb.jpg', '600x600bb.jpg');
+
+    tracks.push({
+      id: `itunes_${item.trackId}`,
+      name: item.trackName,
+      artists: [{ name: item.artistName }],
+      album: {
+        name: item.collectionName || 'Official Studio Release',
+        images: [{ url: art }]
+      },
+      previewUrl: item.previewUrl,
+      duration: Math.round((item.trackTimeMillis || 210000) / 1000)
+    });
+  }
+
+  // Pre-resolve YouTube video IDs for the top 5 tracks in parallel for instant playback
+  const topCount = Math.min(tracks.length, 5);
+  const resolvePromises = [];
+  for (let i = 0; i < topCount; i++) {
+    const q = `${tracks[i].artists[0].name} - ${tracks[i].name}`;
+    resolvePromises.push(
+      resolveYoutubeId(q).then(ytId => {
+        if (ytId) {
+          tracks[i].id = ytId;
+        }
+      })
+    );
+  }
+  await Promise.all(resolvePromises);
+
+  return tracks;
+}
+
 function parseDurationSecs(str) {
   if (!str) return 0;
   const parts = str.split(':').map(Number);
@@ -36,135 +123,79 @@ function cleanArtist(channel) {
 }
 
 const UNLICENSED_MASHUP_BLACKLIST = [
-  'mashup',
-  'mash up',
-  'mash-up',
-  'compilation',
-  'jukebox',
-  'nonstop',
-  'non stop',
-  'full album',
-  'greatest hits',
-  'best of',
-  'best songs of',
-  'playlist',
-  'fan edit',
-  'fan-made',
-  'fanmade',
-  'unlicensed',
-  'slowed',
-  'reverb',
-  'slowed + reverb',
-  'slowed & reverb',
-  'bass boosted',
-  'nightcore',
-  'status video',
-  'ringtone',
-  '10 hours',
-  '1 hour loop',
-  'cover by',
-  'tribute to',
-  'parody'
+  'mashup', 'mash up', 'mash-up', 'compilation', 'jukebox', 'nonstop', 'non stop',
+  'full album', 'greatest hits', 'best of', 'best songs of', 'playlist', 'fan edit',
+  'fan-made', 'fanmade', 'unlicensed', 'slowed', 'reverb', 'slowed + reverb',
+  'slowed & reverb', 'bass boosted', 'nightcore', 'status video', 'ringtone',
+  '10 hours', '1 hour loop', 'cover by', 'tribute to', 'parody'
 ];
 
-function isUnlicensedOrMashup(title, channel, durationSecs) {
-  const lowerTitle = (title || '').toLowerCase();
-  const lowerChannel = (channel || '').toLowerCase();
-
-  // 1. Single songs are practically always between 60s and 450s (7.5 mins).
-  // Anything longer is a multi-song compilation, album, or mashup set.
-  if (durationSecs > 450 || durationSecs < 60) {
-    return true;
-  }
-
-  // 2. Reject bootleg compilations, playlists, and mashup sets
-  if (UNLICENSED_MASHUP_BLACKLIST.some(term => lowerTitle.includes(term))) {
-    return true;
-  }
-
-  // 3. Reject fan-edit channels
-  if (lowerChannel.includes('fan edits') || lowerChannel.includes('status video') || lowerChannel.includes('remix hub')) {
-    return true;
-  }
-
-  return false;
-}
-
-function fetchWithHeaders(url, headers = {}) {
-  return new Promise((resolve, reject) => {
-    https.get(url, { headers }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => resolve({ statusCode: res.statusCode, body: data }));
-    }).on('error', reject);
-  });
-}
-
 async function searchWithScraper(query, limit = 15) {
-  // Append 'official' to prompt YouTube search algorithms towards verified master recordings
-  const refinedQuery = query.toLowerCase().includes('official') ? query : `${query} official audio`;
-  const encoded = encodeURIComponent(refinedQuery.trim());
-  const url = `https://www.youtube.com/results?search_query=${encoded}`;
+  const refinedQuery = `${query} official audio`;
+  const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(refinedQuery)}`;
   
-  const response = await fetchWithHeaders(url, {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept-Language': 'en-US,en;q=0.9'
-  });
-
-  const html = response.body;
-  const match = html.match(/var ytInitialData = ({.*?});<\/script>/) || html.match(/ytInitialData = ({.*?});/);
-  if (!match) return [];
-
-  const json = JSON.parse(match[1]);
-  const contents = json.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents;
-  if (!contents || !Array.isArray(contents)) return [];
-
-  const tracks = [];
-
-  for (const item of contents) {
-    const vr = item.videoRenderer;
-    if (vr && vr.videoId && vr.title?.runs?.[0]?.text) {
-      const rawTitle = vr.title.runs[0].text;
-      const channelTitle = vr.ownerText?.runs?.[0]?.text || '';
-      const durationStr = vr.lengthText?.simpleText || '';
-      const durationSecs = parseDurationSecs(durationStr);
-
-      // Enforce strict authenticity filter
-      if (isUnlicensedOrMashup(rawTitle, channelTitle, durationSecs)) {
-        continue;
+  return new Promise((resolve) => {
+    https.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9'
       }
+    }, (res) => {
+      let html = '';
+      res.on('data', chunk => html += chunk);
+      res.on('end', () => {
+        try {
+          const match = html.match(/var ytInitialData = ({.*?});<\/script>/) || html.match(/ytInitialData = ({.*?});/);
+          if (!match) return resolve([]);
 
-      const videoId = vr.videoId;
+          const json = JSON.parse(match[1]);
+          const contents = json.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents;
+          if (!contents || !Array.isArray(contents)) return resolve([]);
 
-      tracks.push({
-        id: videoId,
-        name: cleanTitle(rawTitle),
-        artists: [{ name: cleanArtist(channelTitle) }],
-        album: {
-          images: [{ url: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg` }]
+          const tracks = [];
+          for (const item of contents) {
+            const vr = item.videoRenderer;
+            if (vr && vr.videoId && vr.title?.runs?.[0]?.text) {
+              const rawTitle = vr.title.runs[0].text;
+              const channelTitle = vr.ownerText?.runs?.[0]?.text || '';
+              const durationStr = vr.lengthText?.simpleText || '';
+              const durationSecs = parseDurationSecs(durationStr);
+              const lowerTitle = rawTitle.toLowerCase();
+
+              // Reject long mixes and mashups
+              if (durationSecs > 450 || durationSecs < 60) continue;
+              if (UNLICENSED_MASHUP_BLACKLIST.some(t => lowerTitle.includes(t))) continue;
+
+              const videoId = vr.videoId;
+              tracks.push({
+                id: videoId,
+                name: cleanTitle(rawTitle),
+                artists: [{ name: cleanArtist(channelTitle) }],
+                album: {
+                  images: [{ url: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg` }]
+                }
+              });
+
+              if (tracks.length >= limit) break;
+            }
+          }
+          resolve(tracks);
+        } catch {
+          resolve([]);
         }
       });
-
-      if (tracks.length >= limit) break;
-    }
-  }
-
-  return tracks;
+    }).on('error', () => resolve([]));
+  });
 }
 
 module.exports = async (req, res) => {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   const query = (req.query.q || req.query.query || '').trim();
@@ -174,14 +205,21 @@ module.exports = async (req, res) => {
     return res.status(200).json([]);
   }
 
-  // 30 min browser cache, 1 hour CDN cache
-  res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400');
+  // 1 hour browser cache, 2 hour CDN cache
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=7200, stale-while-revalidate=86400');
 
   try {
-    const tracks = await searchWithScraper(query, limit);
-    return res.status(200).json(tracks);
+    // 1. Prioritize iTunes Official Music Catalog for genuine studio releases & 1:1 HD square album art
+    const itunesTracks = await searchItunes(query, limit);
+    if (itunesTracks.length > 0) {
+      return res.status(200).json(itunesTracks);
+    }
+
+    // 2. Fall back to filtered YouTube official audio if needed
+    const ytTracks = await searchWithScraper(query, limit);
+    return res.status(200).json(ytTracks);
   } catch (err) {
-    console.error('Search failed:', err);
+    console.error('Search error:', err);
     return res.status(200).json([]);
   }
 };
