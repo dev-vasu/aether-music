@@ -159,21 +159,8 @@ import { CommonModule } from '@angular/common';
           </button>
         </div>
 
-        <!-- Right Utility (Analog VU Meter, Volume & Queue expand) -->
+        <!-- Right Utility (Volume & Queue expand) -->
         <div class="utility-section">
-          <!-- Analog Needle VU Meter Visual Accent -->
-          <div class="vu-capsule" title="Analog VU Meter &bull; Live Decibel Output">
-            <div class="vu-dial-face">
-              <span class="vu-scale">-20</span>
-              <span class="vu-scale">0</span>
-              <span class="vu-scale red">+3</span>
-              <div class="vu-needle-pivot">
-                <div class="vu-needle" [class.active]="isPlaying()"></div>
-              </div>
-            </div>
-            <span class="vu-label">VU METER</span>
-          </div>
-
           <!-- Volume Control -->
           <div class="vol-control">
             <button class="vol-btn" (click)="toggleMute()" title="Mute / Unmute (M)">
@@ -548,87 +535,8 @@ import { CommonModule } from '@angular/common';
       margin-top: 3px;
     }
 
-    /* ANALOG VU METER ACCENT */
-    .vu-capsule {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      padding: 3px 6px;
-      background: #141518;
-      border: 1px solid rgba(255, 87, 34, 0.25);
-      border-radius: 6px;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
-      user-select: none;
-    }
-    .vu-dial-face {
-      width: 58px;
-      height: 22px;
-      background: radial-gradient(circle at 50% 120%, rgba(255, 87, 34, 0.2) 0%, #171512 85%);
-      border-radius: 3px;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      justify-content: space-between;
-      padding: 2px 4px 0 4px;
-    }
-    .vu-scale {
-      font-family: var(--font-mono);
-      font-size: 7.5px;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.45);
-      line-height: 1;
-    }
-    .vu-scale.red {
-      color: #ef4444;
-    }
-    .vu-needle-pivot {
-      position: absolute;
-      bottom: -6px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #2b251f;
-      border: 1px solid rgba(255, 87, 34, 0.4);
-    }
-    .vu-needle {
-      position: absolute;
-      bottom: 6px;
-      left: 5px;
-      width: 1.5px;
-      height: 20px;
-      background: #ff5722;
-      border-radius: 1px;
-      transform-origin: bottom center;
-      transform: rotate(-28deg);
-      transition: transform 0.4s ease;
-      box-shadow: 0 0 4px rgba(255, 87, 34, 0.85);
-    }
-    .vu-needle.active {
-      animation: needleVibe 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    }
-    @keyframes needleVibe {
-      0% { transform: rotate(-28deg); }
-      20% { transform: rotate(14deg); }
-      40% { transform: rotate(-8deg); }
-      60% { transform: rotate(22deg); }
-      80% { transform: rotate(4deg); }
-      100% { transform: rotate(-28deg); }
-    }
-    .vu-label {
-      font-family: var(--font-mono);
-      font-size: 7px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      color: #ff5722;
-      opacity: 0.9;
-      line-height: 1;
-    }
-
     /* UTILITY SECTION */
-    .utility-section { width: 28%; display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+    .utility-section { width: 26%; display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
     .vol-control { display: flex; align-items: center; gap: 8px; }
     .vol-btn { background: none; border: none; padding: 4px; cursor: pointer; display: flex; align-items: center; color: #9ca3af; }
     .vol-icon { width: 17px; height: 17px; fill: currentColor; }
