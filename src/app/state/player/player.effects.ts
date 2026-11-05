@@ -15,7 +15,7 @@ export class PlayerEffects {
     this.actions$.pipe(
       ofType(PlayerActions.loadTopTracks),
       switchMap(() =>
-        from(this.youtubeService.searchMusic('')).pipe(
+        from(this.youtubeService.searchMusic('', { useCache: true, maxResults: 20 })).pipe(
           map((tracks) => {
             if (!tracks || tracks.length === 0) {
               const curated = this.youtubeService.getCuratedMockData();
@@ -36,7 +36,7 @@ export class PlayerEffects {
     this.actions$.pipe(
       ofType(PlayerActions.searchTracks),
       switchMap(({ query }) =>
-        from(this.youtubeService.searchMusic(query, { isUserSearch: true })).pipe(
+        from(this.youtubeService.searchMusic(query, { isUserSearch: true, maxResults: 24 })).pipe(
           map((tracks) => {
             if (!tracks || tracks.length === 0) {
               const curated = this.youtubeService.getCuratedMockData();
@@ -79,7 +79,7 @@ export class PlayerEffects {
     this.actions$.pipe(
       ofType(PlayerActions.setCurrentTrack),
       map(({ track }) => {
-        const query = track ? `${track.artists[0]?.name || ''} ${track.name} similar` : '';
+        const query = track ? `${track.artists[0]?.name || ''} ${track.name} official audio` : '';
         return PlayerActions.loadRecommendations({ query });
       })
     )
@@ -90,7 +90,7 @@ export class PlayerEffects {
       ofType(PlayerActions.loadRecommendations),
       switchMap(({ query }) => {
         if (!query) return of(PlayerActions.loadRecommendationsSuccess({ tracks: [] }));
-        return from(this.youtubeService.searchMusic(query, { useCache: true, maxResults: 10 })).pipe(
+        return from(this.youtubeService.searchMusic(query, { useCache: true, maxResults: 12 })).pipe(
           map(tracks => {
             if (!tracks || tracks.length === 0) {
               const curated = this.youtubeService.getCuratedMockData();
