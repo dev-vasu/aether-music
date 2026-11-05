@@ -26,7 +26,10 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="braun-player" 
          [class.expanded]="isExpanded()"
-         [class.playing]="isPlaying()">
+         [class.playing]="isPlaying()"
+         [style.--song-primary]="colors().primary || '#ff5722'"
+         [style.--song-secondary]="colors().secondary || '#ff5722'">
+      <div class="player-theme-aura"></div>
       <div class="chassis-trim"></div>
       <div id="yt-player-container"><div id="yt-player"></div></div>
 
@@ -264,11 +267,43 @@ import { CommonModule } from '@angular/common';
     .chassis-trim {
       position: absolute;
       top: 0;
-      left: 12%;
-      right: 12%;
+      left: 10%;
+      right: 10%;
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255, 87, 34, 0.45) 20%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 87, 34, 0.45) 80%, transparent);
+      background: linear-gradient(90deg, 
+        transparent, 
+        color-mix(in srgb, var(--song-primary, #ff5722) 65%, white 20%) 20%, 
+        rgba(255, 255, 255, 0.35) 50%, 
+        color-mix(in srgb, var(--song-primary, #ff5722) 65%, white 20%) 80%, 
+        transparent
+      );
       pointer-events: none;
+      transition: background 1.2s ease;
+      z-index: 2;
+    }
+
+    /* SONG THEME ACCENT AURA */
+    .player-theme-aura {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: radial-gradient(
+        ellipse 90% 120% at 15% -10%,
+        color-mix(in srgb, var(--song-primary, #ff5722) 22%, transparent) 0%,
+        transparent 65%
+      ),
+      radial-gradient(
+        ellipse 70% 90% at 85% 110%,
+        color-mix(in srgb, var(--song-secondary, #ff5722) 16%, transparent) 0%,
+        transparent 70%
+      );
+      opacity: 0.45;
+      transition: opacity 0.8s ease, background 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 0;
+    }
+    .braun-player.playing .player-theme-aura {
+      opacity: 0.78;
     }
 
     .braun-player {
@@ -284,14 +319,25 @@ import { CommonModule } from '@angular/common';
       display: flex;
       flex-direction: column;
       gap: 10px;
+      overflow: hidden;
     }
     .braun-player.playing {
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 35px rgba(255, 87, 34, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      border-color: color-mix(in srgb, var(--song-primary, #ff5722) 30%, rgba(255, 255, 255, 0.12));
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 
+                  0 0 35px color-mix(in srgb, var(--song-primary, #ff5722) 22%, transparent), 
+                  inset 0 1px 0 rgba(255, 255, 255, 0.12);
     }
     .braun-player.expanded { border-radius: 24px; padding-bottom: 28px; max-height: 560px; }
 
     /* PRECISION PROGRESS BAR */
-    .progress-container { display: flex; align-items: center; gap: 12px; padding: 0 4px; }
+    .progress-container { 
+      position: relative;
+      z-index: 1;
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      padding: 0 4px; 
+    }
     .time-label { font-family: monospace; font-size: 11px; color: #9ca3af; width: 40px; font-weight: 600; text-align: center; }
     .progress-bar-wrap { flex: 1; height: 6px; display: flex; align-items: center; }
     
@@ -321,7 +367,14 @@ import { CommonModule } from '@angular/common';
     }
     .progress-slider::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
-    .player-content { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .player-content { 
+      position: relative;
+      z-index: 1;
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      gap: 20px; 
+    }
     .track-section { display: flex; align-items: center; gap: 14px; width: 34%; min-width: 0; }
     
     .art-frame {
@@ -545,7 +598,12 @@ import { CommonModule } from '@angular/common';
     .drawer-btn.open { color: #ff5722; }
 
     /* EXPANDED DRAWER */
-    .expanded-discovery { margin-top: 18px; overflow: hidden; }
+    .expanded-discovery { 
+      position: relative;
+      z-index: 1;
+      margin-top: 18px; 
+      overflow: hidden; 
+    }
     .glow-line { height: 1px; background: rgba(255, 255, 255, 0.08); margin-bottom: 16px; }
     .drawer-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; }
     .ml-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }

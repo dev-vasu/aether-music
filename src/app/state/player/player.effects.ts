@@ -65,13 +65,29 @@ export class PlayerEffects {
 
   updateColors$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(PlayerActions.setCurrentTrack),
-      switchMap(({ track }) => {
+      ofType(
+        PlayerActions.setCurrentTrack,
+        PlayerActions.setQueue,
+        PlayerActions.next,
+        PlayerActions.previous
+      ),
+      withLatestFrom(this.store.select(selectCurrentTrack)),
+      switchMap(([action, currentTrack]) => {
+        let track = currentTrack;
+        if ('track' in action && action.track) {
+          track = action.track;
+        } else if ('tracks' in action && action.tracks && action.tracks.length > 0) {
+          const idx = action.startIndex || 0;
+          track = action.tracks[idx] || action.tracks[0];
+        }
+
         const imageUrl = track?.album?.images?.[0]?.url;
-        if (!imageUrl) return of(PlayerActions.setColors({ primary: '#6366f1', secondary: '#a855f7' }));
-        return from(this.colorExtractor.extractColors(imageUrl)).pipe(
+        const trackName = track?.name;
+        const artistName = track?.artists?.[0]?.name;
+
+        return from(this.colorExtractor.extractColors(imageUrl, trackName, artistName)).pipe(
           map(({ primary, secondary }) => PlayerActions.setColors({ primary, secondary })),
-          catchError(() => of(PlayerActions.setColors({ primary: '#6366f1', secondary: '#a855f7' })))
+          catchError(() => of(PlayerActions.setColors({ primary: '#ff5722', secondary: '#f59e0b' })))
         );
       })
     )

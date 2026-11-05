@@ -9,9 +9,9 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <div class="braun-universe">
-      <!-- Subtle Architectural Ambient Gradients -->
-      <div class="ambient-glow glow-top"></div>
-      <div class="ambient-glow glow-bottom"></div>
+      <!-- Subtle Architectural Ambient Gradients with Current Song Accent -->
+      <div class="ambient-glow glow-top" [style.background]="topGlow()"></div>
+      <div class="ambient-glow glow-bottom" [style.background]="bottomGlow()"></div>
       
       <!-- Fine Acoustic Grid Texture -->
       <div class="subtle-texture"></div>
@@ -37,25 +37,23 @@ import { CommonModule } from '@angular/common';
       position: absolute;
       border-radius: 50%;
       filter: blur(140px);
-      opacity: 0.22;
+      opacity: 0.36;
       pointer-events: none;
-      transition: opacity 1.5s ease;
+      transition: background 1.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.5s ease;
     }
 
     .glow-top {
-      width: 60vw;
-      height: 50vh;
-      top: -10%;
-      left: 20%;
-      background: radial-gradient(circle, rgba(255, 87, 34, 0.12) 0%, rgba(35, 38, 45, 0.4) 60%, transparent 80%);
+      width: 65vw;
+      height: 55vh;
+      top: -12%;
+      left: 18%;
     }
 
     .glow-bottom {
-      width: 70vw;
-      height: 50vh;
+      width: 75vw;
+      height: 55vh;
       bottom: -15%;
-      right: 15%;
-      background: radial-gradient(circle, rgba(30, 33, 40, 0.6) 0%, transparent 70%);
+      right: 12%;
     }
 
     .subtle-texture {
@@ -76,4 +74,14 @@ import { CommonModule } from '@angular/common';
 export class BackgroundComponent {
   private store = inject(Store);
   playerColors = this.store.selectSignal(selectPlayerColors);
+
+  topGlow = computed(() => {
+    const c = this.playerColors().primary || '#ff5722';
+    return `radial-gradient(circle, color-mix(in srgb, ${c} 22%, transparent) 0%, rgba(35, 38, 45, 0.35) 60%, transparent 80%)`;
+  });
+
+  bottomGlow = computed(() => {
+    const c = this.playerColors().secondary || '#ff5722';
+    return `radial-gradient(circle, color-mix(in srgb, ${c} 18%, transparent) 0%, rgba(30, 33, 40, 0.45) 55%, transparent 70%)`;
+  });
 }
