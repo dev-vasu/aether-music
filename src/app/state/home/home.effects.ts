@@ -9,7 +9,8 @@ export class HomeEffects {
   private actions$ = inject(Actions);
   private ytService = inject(YoutubeService);
 
-  private readonly CACHE_KEY = 'melody_home_cache_v8'; // Bumped version for real live music & rich fallbacks
+  // Bumped to v9 to purge old cached mashups and unlicensed compilations from users' browsers
+  private readonly CACHE_KEY = 'melody_home_cache_v9';
   private readonly CACHE_EXPIRY = 24 * 60 * 60 * 1000;
 
   loadCategorizedMusic$ = createEffect(() =>
@@ -20,12 +21,12 @@ export class HomeEffects {
         if (cachedData) return of(HomeActions.loadCategorizedMusicSuccess(cachedData));
 
         return forkJoin({
-          trending: this.ytService.searchMusic('top hits 2026 official audio', { useCache: true }),
-          hindi: this.ytService.searchMusic('Arijit Singh Pritam hits official audio', { useCache: true }),
-          english: this.ytService.searchMusic('Taylor Swift Billie Eilish hits official audio', { useCache: true }),
-          punjabi: this.ytService.searchMusic('Diljit Dosanjh Karan Aujla hits official audio', { useCache: true }),
-          instaViral: this.ytService.searchMusic('Trending Phonk Drift 2026', { useCache: true }),
-          devotional: this.ytService.searchMusic('Coke Studio Pakistan Sufi hits', { useCache: true })
+          trending: this.ytService.searchMusic('The Weeknd Bruno Mars Dua Lipa official audio', { useCache: true }),
+          hindi: this.ytService.searchMusic('Arijit Singh Pritam official audio', { useCache: true }),
+          english: this.ytService.searchMusic('Taylor Swift Billie Eilish official music video', { useCache: true }),
+          punjabi: this.ytService.searchMusic('Diljit Dosanjh Karan Aujla official audio', { useCache: true }),
+          instaViral: this.ytService.searchMusic('INTERWORLD Kordhell phonk official audio', { useCache: true }),
+          devotional: this.ytService.searchMusic('Coke Studio Pakistan official audio', { useCache: true })
         }).pipe(
           map(results => {
             const filterRowUnique = (tracks: any[]) => {
@@ -48,13 +49,14 @@ export class HomeEffects {
             const instaTracks = filterRowUnique(results.instaViral);
             const devotionalTracks = filterRowUnique(results.devotional);
 
+            // Guarantee that authentic original tracks from curated are prioritized/merged
             const finalized = {
-              trending: trendingTracks.length > 0 ? trendingTracks : curated.trending,
-              hindi: hindiTracks.length > 0 ? hindiTracks : curated.hindi,
-              english: englishTracks.length > 0 ? englishTracks : curated.english,
-              punjabi: punjabiTracks.length > 0 ? punjabiTracks : curated.punjabi,
-              instaViral: instaTracks.length > 0 ? instaTracks : curated.instaViral,
-              devotional: devotionalTracks.length > 0 ? devotionalTracks : curated.devotional
+              trending: trendingTracks.length >= 4 ? trendingTracks : curated.trending,
+              hindi: hindiTracks.length >= 4 ? hindiTracks : curated.hindi,
+              english: englishTracks.length >= 4 ? englishTracks : curated.english,
+              punjabi: punjabiTracks.length >= 4 ? punjabiTracks : curated.punjabi,
+              instaViral: instaTracks.length >= 4 ? instaTracks : curated.instaViral,
+              devotional: devotionalTracks.length >= 4 ? devotionalTracks : curated.devotional
             };
 
             this.saveCache(finalized);
