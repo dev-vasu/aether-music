@@ -1,17 +1,23 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { PlayerBarComponent } from './player-bar';
+import { provideStore } from '@ngrx/store';
+import { provideRouter } from '@angular/router';
+import { playerReducer } from '../../state/player/player.reducer';
 
-import { PlayerBar } from './player-bar';
-
-describe('PlayerBar', () => {
-  let component: PlayerBar;
-  let fixture: ComponentFixture<PlayerBar>;
+describe('PlayerBarComponent', () => {
+  let component: PlayerBarComponent;
+  let fixture: ComponentFixture<PlayerBarComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PlayerBar],
+      imports: [PlayerBarComponent],
+      providers: [
+        provideStore({ player: playerReducer }),
+        provideRouter([])
+      ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(PlayerBar);
+    fixture = TestBed.createComponent(PlayerBarComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

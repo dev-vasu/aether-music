@@ -1,46 +1,42 @@
 import { Injectable } from '@angular/core';
-import * as ColorThiefNamespace from 'colorthief';
-
-const ColorThief = (ColorThiefNamespace as any).default || ColorThiefNamespace;
+import { getPalette } from 'colorthief';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ColorExtractorService {
-  private colorThief: any;
+  async extractColors(imageUrl: string): Promise<{ primary: string; secondary: string }> {
+    const fallback = { primary: '#6366f1', secondary: '#a855f7' };
+    if (!imageUrl) return fallback;
 
-  extractColors(imageUrl: string): Promise<{ primary: string, secondary: string }> {
-    if (!this.colorThief) {
-      try {
-        this.colorThief = new ColorThief();
-      } catch (e) {
-        console.error('Failed to initialize ColorThief', e);
-        return Promise.resolve({ primary: '#6366f1', secondary: '#a855f7' });
-      }
-    }
-    return new Promise((resolve, reject) => {
+    return new Promise<{ primary: string; secondary: string }>((resolve) => {
       const img = new Image();
       img.crossOrigin = 'Anonymous';
       img.src = imageUrl;
-      img.onload = () => {
+
+      img.onload = async () => {
         try {
-            const palette = this.colorThief.getPalette(img, 5);
-            let primary = `rgb(${palette[0].join(',')})`;
-            let secondary = `rgb(${palette[1].join(',')})`;
-            
-            // Aether Shift: If color is too green/dark, shift it to cosmic violet/indigo
-            const r = palette[0][0], g = palette[0][1], b = palette[0][2];
-            // Detect "Spotify Green" range (high green, low red/blue)
-            if (g > 150 && r < 100 && b < 100) {
-                primary = '#a855f7'; // Force to Violet
-            }
-            
-            resolve({ primary, secondary });
-        } catch (e) {
-            resolve({ primary: '#6366f1', secondary: '#a855f7' });
+          const palette = await getPalette(img, { colorCount: 5 });
+          if (!palette || palette.length === 0) {
+            return resolve(fallback);
+          }
+
+          let primary = palette[0]?.hex() || fallback.primary;
+          let secondary = palette[1]?.hex() || palette[0]?.hex() || fallback.secondary;
+
+          // Color calibration: if primary is too green, shift to cosmic violet
+          const rgb = palette[0]?.rgb();
+          if (rgb && rgb.g > 150 && rgb.r < 100 && rgb.b < 100) {
+            primary = '#a855f7';
+          }
+
+          resolve({ primary, secondary });
+        } catch {
+          resolve(fallback);
         }
       };
-      img.onerror = (err) => resolve({ primary: '#6366f1', secondary: '#a855f7' });
+
+      img.onerror = () => resolve(fallback);
     });
   }
 }

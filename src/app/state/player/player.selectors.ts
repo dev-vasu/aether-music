@@ -19,21 +19,41 @@ export const selectPlayerColors = createSelector(
 );
 
 export const selectTopTracks = createSelector(
-    selectPlayerState,
-    (state) => state.topTracks
+  selectPlayerState,
+  (state) => state.topTracks
 );
 
 export const selectRecommendedTracks = createSelector(
-    selectPlayerState,
-    (state) => state.recommendedTracks
+  selectPlayerState,
+  (state) => state.recommendedTracks
 );
 
 export const selectPlaylists = createSelector(
-    selectPlayerState,
-    (state) => state.playlists
+  selectPlayerState,
+  (state) => state.playlists
 );
 
 export const selectPlayerLoading = createSelector(
-    selectPlayerState,
-    (state) => state.loading
+  selectPlayerState,
+  (state) => state.loading
+);
+
+export const selectQueue = createSelector(
+  selectPlayerState,
+  (state) => state.queue
+);
+
+export const selectQueueIndex = createSelector(
+  selectPlayerState,
+  (state) => state.queueIndex
+);
+
+export const selectIsShuffled = createSelector(
+  selectPlayerState,
+  (state) => state.isShuffled
+);
+
+export const selectRepeatMode = createSelector(
+  selectPlayerState,
+  (state) => state.repeatMode
 );

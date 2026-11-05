@@ -12,7 +12,7 @@ import { RouterModule } from '@angular/router';
     <div class="sidebar">
       <div class="logo">
         <svg viewBox="0 0 24 24" fill="currentColor" class="logo-icon"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-        <span class="text">Melody</span>
+        <span class="text">Aether</span>
       </div>
       <nav>
         <ul>
@@ -32,7 +32,7 @@ import { RouterModule } from '@angular/router';
       </nav>
       <div class="playlists">
         <div class="playlist-header">
-            <h3>Your Playlists</h3>
+            <h3>Your Orbit</h3>
             <svg viewBox="0 0 24 24" fill="currentColor" class="plus-icon"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
         </div>
         <ul>
@@ -48,27 +48,27 @@ import { RouterModule } from '@angular/router';
     .sidebar {
       width: 260px;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(10, 10, 18, 0.7);
       backdrop-filter: blur(25px);
       color: white;
       padding: 24px;
       display: flex;
       flex-direction: column;
-      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
     }
     .logo {
       display: flex;
       align-items: center;
       gap: 12px;
       font-size: 22px;
-      font-weight: 700;
+      font-weight: 900;
       margin-bottom: 40px;
       letter-spacing: -0.5px;
     }
     .logo-icon {
-        width: 28px;
-        height: 28px;
-        color: #a855f7;
+      width: 28px;
+      height: 28px;
+      color: #a855f7;
     }
     nav ul {
       list-style: none;
@@ -84,67 +84,72 @@ import { RouterModule } from '@angular/router';
       display: flex;
       align-items: center;
       gap: 16px;
-      font-weight: 500;
-      border-radius: 8px;
+      font-weight: 600;
+      border-radius: 12px;
     }
     nav li:hover {
       opacity: 1;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.06);
     }
     nav li.active {
-        opacity: 1;
-        background: rgba(255, 255, 255, 0.1);
+      opacity: 1;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+      color: #c084fc;
     }
     .nav-icon {
-        width: 24px;
-        height: 24px;
+      width: 22px;
+      height: 22px;
     }
     .playlist-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-        padding: 0 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 0 16px;
     }
     .plus-icon {
-        width: 20px;
-        height: 20px;
-        opacity: 0.5;
-        cursor: pointer;
+      width: 20px;
+      height: 20px;
+      opacity: 0.5;
+      cursor: pointer;
     }
     .plus-icon:hover {
-        opacity: 1;
+      opacity: 1;
+      color: #a855f7;
     }
     .playlists {
       flex-grow: 1;
       overflow-y: auto;
     }
     .playlists ul {
-        list-style: none;
-        padding: 0;
+      list-style: none;
+      padding: 0;
     }
     .playlists li {
-        padding: 8px 16px;
-        font-size: 14px;
-        opacity: 0.5;
-        cursor: pointer;
-        transition: opacity 0.2s;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      padding: 8px 16px;
+      font-size: 13px;
+      opacity: 0.5;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border-radius: 8px;
     }
     .playlists li:hover {
-        opacity: 1;
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.03);
     }
     .empty-state {
-        font-style: italic;
-        font-size: 12px !important;
+      font-style: italic;
+      font-size: 12px !important;
     }
     h3 {
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
       opacity: 0.4;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
+      font-weight: 800;
     }
   `]
 })

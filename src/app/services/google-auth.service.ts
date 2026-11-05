@@ -21,6 +21,7 @@ export class GoogleAuthService {
   public userProfile = signal<UserProfile | null>(null);
   public anonymousPlayCount = signal<number>(0);
   public cloudSyncStatus = signal<SyncStatus>('disabled');
+  public gateDismissed = signal<boolean>(false);
 
   public funkyAvatars = [
     { id: 1, name: 'Cyber Cat', color: 'linear-gradient(135deg, #FF0080, #7928CA)', svg: `<svg viewBox="0 0 24 24"><path fill="#fff" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8 S16.41,20,12,20z M7,10c0.55,0,1-0.45,1-1c0-0.55-0.45-1-1-1s-1,0.45-1,1C6,9.55,6.45,10,7,10z M17,10c0.55,0,1-0.45,1-1 c0-0.55-0.45-1-1-1s-1,0.45-1,1C16,9.55,16.45,10,17,10z M12,14c-1.33,0-4,0.67-4,2v1h8v-1C16,14.67,13.33,14,12,14z"/></svg>` },
@@ -40,6 +41,10 @@ export class GoogleAuthService {
 
   constructor() {
     this.checkToken();
+  }
+
+  dismissGate() {
+    this.gateDismissed.set(true);
   }
 
   getAvatarSvg(id?: number): SafeHtml {
@@ -91,6 +96,7 @@ export class GoogleAuthService {
   }
 
   private async checkToken() {
+    if (typeof window === 'undefined') return;
     const hash = window.location.hash;
     if (hash) {
       const params = new URLSearchParams(hash.substring(1));
@@ -102,7 +108,7 @@ export class GoogleAuthService {
         await this.fetchProfile(token);
       }
     } else {
-        const savedToken = localStorage.getItem('melody_google_token');
+        const savedToken = typeof localStorage !== 'undefined' ? localStorage.getItem('melody_google_token') : null;
         if (savedToken) {
             this.accessToken.set(savedToken);
             await this.fetchProfile(savedToken);
@@ -125,7 +131,7 @@ export class GoogleAuthService {
       let alias = cloudProfile?.alias || '';
       let avatarId = cloudProfile?.avatarId || 0;
 
-      if (!cloudProfile) {
+      if (!cloudProfile && typeof localStorage !== 'undefined') {
           const savedIdentity = localStorage.getItem(`melody_identity_${email}`);
           if (savedIdentity) {
               const parsed = JSON.parse(savedIdentity);
@@ -144,7 +150,9 @@ export class GoogleAuthService {
       });
     } catch (e) {
       this.accessToken.set(null);
-      localStorage.removeItem('melody_google_token');
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('melody_google_token');
+      }
       this.cloudSyncStatus.set('error');
     }
   }
@@ -234,5 +242,12 @@ export class GoogleAuthService {
   }
 
   getToken() { return this.accessToken(); }
-  logout() { localStorage.removeItem('melody_google_token'); window.location.href = '/'; }
+  logout() {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('melody_google_token');
+    }
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
+  }
 }

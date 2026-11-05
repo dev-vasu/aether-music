@@ -1,17 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { BackgroundComponent } from './background';
+import { provideStore } from '@ngrx/store';
+import { playerReducer } from '../../state/player/player.reducer';
 
-import { Background } from './background';
-
-describe('Background', () => {
-  let component: Background;
-  let fixture: ComponentFixture<Background>;
+describe('BackgroundComponent', () => {
+  let component: BackgroundComponent;
+  let fixture: ComponentFixture<BackgroundComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Background],
+      imports: [BackgroundComponent],
+      providers: [
+        provideStore({ player: playerReducer })
+      ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Background);
+    fixture = TestBed.createComponent(BackgroundComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
