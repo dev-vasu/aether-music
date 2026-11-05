@@ -275,4 +275,90 @@ export class YoutubeService {
       ]
     };
   }
+
+  async getVibeRecommendations(currentTrack?: any): Promise<{ tracks: any[]; vibeProfile: string }> {
+    const curated = this.getCuratedMockData();
+    let vibeProfile = 'GLOBAL CURATION // TOP ECHOES';
+    let vibeTag = 'VIBE MATCH';
+    let basePool: any[] = [];
+
+    if (currentTrack) {
+      const trackId = currentTrack.id;
+      const trackName = (currentTrack.name || '').toLowerCase();
+      const artist = (currentTrack.artists?.[0]?.name || '').toLowerCase();
+
+      // Classify vibe signature
+      if (curated.instaViral.some(t => t.id === trackId || t.name.toLowerCase() === trackName) || artist.includes('phonk') || artist.includes('interworld') || artist.includes('kordhell')) {
+        vibeProfile = 'DARK PHONK // 140 BPM BASS FLOW';
+        vibeTag = 'DRIFT';
+        basePool = [...curated.instaViral, ...curated.trending];
+      } else if (curated.hindi.some(t => t.id === trackId || t.name.toLowerCase() === trackName) || artist.includes('arijit') || artist.includes('jubin') || artist.includes('pritam') || artist.includes('singh')) {
+        vibeProfile = 'BOLLYWOOD SOUL // ACOUSTIC WARMTH';
+        vibeTag = 'MELODIC';
+        basePool = [...curated.hindi, ...curated.devotional];
+      } else if (curated.punjabi.some(t => t.id === trackId || t.name.toLowerCase() === trackName) || artist.includes('diljit') || artist.includes('moose') || artist.includes('dhillon') || artist.includes('aujla')) {
+        vibeProfile = 'PUNJABI DRIFT // URBAN BASS';
+        vibeTag = 'PUNJABI';
+        basePool = [...curated.punjabi, ...curated.trending];
+      } else if (curated.devotional.some(t => t.id === trackId || t.name.toLowerCase() === trackName) || artist.includes('jagjit') || artist.includes('rahman') || artist.includes('ali') || artist.includes('hariharan')) {
+        vibeProfile = 'SUFI & SPIRITUAL // MEDITATIVE';
+        vibeTag = 'SUFI';
+        basePool = [...curated.devotional, ...curated.hindi];
+      } else if (curated.english.some(t => t.id === trackId || t.name.toLowerCase() === trackName) || artist.includes('styles') || artist.includes('malone') || artist.includes('cyrus') || artist.includes('eilish')) {
+        vibeProfile = 'INDIE CHILL // HARMONIC ECHO';
+        vibeTag = 'INDIE';
+        basePool = [...curated.english, ...curated.trending];
+      } else {
+        vibeProfile = 'GLOBAL SYNTHPOP // 120 BPM';
+        vibeTag = 'SYNTH';
+        basePool = [...curated.trending, ...curated.english];
+      }
+    } else {
+      vibeProfile = 'GLOBAL CURATION // TOP ECHOES';
+      vibeTag = 'TRENDING';
+      basePool = [...curated.trending, ...curated.instaViral];
+    }
+
+    // Try live matching via API if track has artist
+    let liveTracks: any[] = [];
+    if (currentTrack && currentTrack.artists?.[0]?.name) {
+      try {
+        const query = `${currentTrack.artists[0].name} vibe`;
+        const res = await this.searchMusic(query, { useCache: true, maxResults: 8 });
+        if (Array.isArray(res) && res.length > 0) {
+          liveTracks = res;
+        }
+      } catch {}
+    }
+
+    const combined = [...liveTracks, ...basePool];
+    const seen = new Set<string>();
+    const currentId = currentTrack?.id;
+    const currentName = (currentTrack?.name || '').toLowerCase().trim();
+
+    const result: any[] = [];
+    const matchScores = [99, 97, 95, 93, 91, 88, 86, 84];
+
+    for (const t of combined) {
+      if (!t || !t.id) continue;
+      // Do not recommend currently playing track
+      if (currentId && t.id === currentId) continue;
+      if (currentName && t.name && t.name.toLowerCase().trim() === currentName) continue;
+
+      const normKey = ((t.name || '') + ' ' + (t.artists?.[0]?.name || '')).toLowerCase();
+      if (seen.has(normKey)) continue;
+      seen.add(normKey);
+
+      const score = matchScores[result.length] || 85;
+      result.push({
+        ...t,
+        vibeMatchScore: `${score}%`,
+        vibeTag: t.vibeTag || vibeTag
+      });
+
+      if (result.length >= 8) break;
+    }
+
+    return { tracks: result, vibeProfile };
+  }
 }

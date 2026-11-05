@@ -23,8 +23,8 @@ export const PlayerActions = createActionGroup({
     'Set Volume': props<{ volume: number }>(),
     'Set Progress': props<{ progress: number }>(),
     'Set Colors': props<{ primary: string; secondary: string }>(),
-    'Load Recommendations': props<{ query: string }>(),
-    'Load Recommendations Success': props<{ tracks: any[] }>(),
+    'Load Recommendations': props<{ query?: string; track?: any }>(),
+    'Load Recommendations Success': props<{ tracks: any[]; vibeProfile?: string }>(),
     'Load Recommendations Failure': props<{ error: string }>(),
   }
 });

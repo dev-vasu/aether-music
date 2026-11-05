@@ -18,6 +18,8 @@ export interface PlayerState {
   topTracks: any[];
   searchResults: any[];
   recommendedTracks: any[];
+  vibeProfile: string;
+  loadingRecommendations: boolean;
   primaryColor: string;
   secondaryColor: string;
   loading: boolean;
@@ -39,6 +41,8 @@ export const initialState: PlayerState = {
   topTracks: [],
   searchResults: [],
   recommendedTracks: [],
+  vibeProfile: 'AETHER HARMONIC FLOW',
+  loadingRecommendations: false,
   primaryColor: '#6366f1',
   secondaryColor: '#a855f7',
   loading: false,
@@ -221,9 +225,19 @@ export const playerReducer = createReducer(
     primaryColor: primary,
     secondaryColor: secondary,
   })),
-  on(PlayerActions.loadRecommendationsSuccess, (state, { tracks }) => ({
+  on(PlayerActions.loadRecommendations, (state) => ({
     ...state,
-    recommendedTracks: tracks
+    loadingRecommendations: true
+  })),
+  on(PlayerActions.loadRecommendationsSuccess, (state, { tracks, vibeProfile }) => ({
+    ...state,
+    recommendedTracks: tracks,
+    vibeProfile: vibeProfile || state.vibeProfile,
+    loadingRecommendations: false
+  })),
+  on(PlayerActions.loadRecommendationsFailure, (state) => ({
+    ...state,
+    loadingRecommendations: false
   })),
   on(PlayerActions.loadTopTracksSuccess, (state, { tracks }) => ({
     ...state,

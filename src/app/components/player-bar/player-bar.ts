@@ -4,6 +4,8 @@ import {
   selectCurrentTrack,
   selectIsPlaying,
   selectRecommendedTracks,
+  selectVibeProfile,
+  selectLoadingRecommendations,
   selectQueue,
   selectQueueIndex,
   selectIsShuffled,
@@ -193,8 +195,8 @@ import { CommonModule } from '@angular/common';
           <button
             class="action-btn drawer-btn"
             [class.open]="isExpanded()"
-            (click)="isExpanded.set(!isExpanded())"
-            title="Recommendations & Queue">
+            (click)="toggleDrawer()"
+            title="AI Vibe Match & Orbit Queue">
             <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
           </button>
         </div>
@@ -207,17 +209,36 @@ import { CommonModule } from '@angular/common';
           <!-- Recommendations Section -->
           <div class="ml-feed">
             <div class="ml-header">
-              <span class="badge">AI Recommended</span>
-              <h3>Vibe Match Engine</h3>
+              <div class="vibe-title-lockup">
+                <span class="badge">AI Recommended</span>
+                <h3>Vibe Match Engine</h3>
+              </div>
+              <div class="vibe-profile-pill" *ngIf="vibeProfile()">
+                <span class="vibe-pulse-dot"></span>
+                <span class="vibe-profile-text">{{ vibeProfile() }}</span>
+              </div>
             </div>
-            <div class="recommendations-scroll">
+
+            <!-- Scanning State when loading -->
+            <div class="vibe-loading-card" *ngIf="loadingRecommendations() && recommendations().length === 0">
+              <div class="vibe-beam"></div>
+              <span class="vibe-loading-text">Synthesizing Acoustic Vibe Signature...</span>
+            </div>
+
+            <div class="recommendations-scroll" *ngIf="recommendations().length > 0">
               <div class="rec-item" *ngFor="let rec of recommendations()" (click)="playRec(rec)">
                 <img [src]="rec.album.images[0]?.url || fallbackCover"
                      class="rec-art"
                      (error)="handleImgError($event)">
                 <div class="rec-meta">
-                  <span class="rec-name">{{ rec.name }}</span>
-                  <span class="rec-artist">{{ rec.artists[0]?.name }}</span>
+                  <div class="rec-meta-top">
+                    <span class="rec-name" [title]="rec.name">{{ rec.name }}</span>
+                    <span class="rec-score" *ngIf="rec.vibeMatchScore">{{ rec.vibeMatchScore }}</span>
+                  </div>
+                  <div class="rec-meta-sub">
+                    <span class="rec-artist">{{ rec.artists[0]?.name }}</span>
+                    <span class="rec-tag" *ngIf="rec.vibeTag">{{ rec.vibeTag }}</span>
+                  </div>
                 </div>
                 <div class="rec-play-btn">
                   <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -618,18 +639,109 @@ import { CommonModule } from '@angular/common';
     /* EXPANDED DRAWER */
     .expanded-discovery { margin-top: 18px; overflow: hidden; }
     .glow-line { height: 1px; background: rgba(255, 255, 255, 0.08); margin-bottom: 16px; }
-    .drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .ml-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-    .badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(255, 87, 34, 0.1); color: #ff7043; padding: 3px 8px; border-radius: 6px; }
+    .drawer-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; }
+    .ml-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+    .vibe-title-lockup { display: flex; align-items: center; gap: 8px; }
+    .badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(255, 87, 34, 0.12); color: #ff7043; padding: 3px 8px; border-radius: 6px; }
     .badge.queue-badge { background: rgba(255, 255, 255, 0.08); color: #d1d5db; }
-    .ml-header h3 { font-size: 14px; font-weight: 700; color: #f3f4f6; }
+    .ml-header h3 { font-size: 13.5px; font-weight: 700; color: #f3f4f6; letter-spacing: -0.2px; }
+    
+    .vibe-profile-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      background: #141518;
+      border: 1px solid rgba(255, 87, 34, 0.3);
+      border-radius: 4px;
+      max-width: 220px;
+    }
+    .vibe-pulse-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #ff5722;
+      box-shadow: 0 0 6px #ff5722;
+      animation: pulseDot 1.5s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .vibe-profile-text {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      color: #ff5722;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* VIBE SCANNING STATE */
+    .vibe-loading-card {
+      position: relative;
+      height: 70px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(255, 87, 34, 0.3);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .vibe-beam {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 40px;
+      background: linear-gradient(90deg, transparent, rgba(255, 87, 34, 0.25), transparent);
+      animation: scanBeam 1.8s infinite ease-in-out;
+    }
+    @keyframes scanBeam {
+      0% { left: -10%; }
+      100% { left: 110%; }
+    }
+    .vibe-loading-text {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: #9ca3af;
+      position: relative;
+      z-index: 2;
+    }
+
     .recommendations-scroll { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; padding-right: 6px; }
-    .rec-item { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; background: rgba(255, 255, 255, 0.02); }
-    .rec-item:hover { background: #24262c; transform: translateX(3px); }
-    .rec-art { width: 36px; height: 36px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
-    .rec-meta { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
+    .rec-item { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; background: rgba(255, 255, 255, 0.02); border: 1px solid transparent; }
+    .rec-item:hover { background: #24262c; border-color: rgba(255, 255, 255, 0.08); transform: translateX(3px); }
+    .rec-art { width: 38px; height: 38px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
+    .rec-meta { display: flex; flex-direction: column; gap: 2px; overflow: hidden; flex: 1; }
+    .rec-meta-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .rec-meta-sub { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .rec-name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f3f4f6; }
+    .rec-score {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      font-weight: 800;
+      color: #ff5722;
+      background: rgba(255, 87, 34, 0.12);
+      padding: 1px 5px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
     .rec-artist { font-size: 11px; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rec-tag {
+      font-family: var(--font-mono);
+      font-size: 7.5px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #9ca3af;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0 4px;
+      border-radius: 3px;
+    }
     .rec-play-btn { opacity: 0; transition: opacity 0.2s; }
     .rec-play-btn svg { width: 16px; height: 16px; fill: #ff5722; }
     .rec-item:hover .rec-play-btn { opacity: 1; }
@@ -665,6 +777,8 @@ export class PlayerBarComponent implements OnInit, OnDestroy {
   track = this.store.selectSignal(selectCurrentTrack);
   isPlaying = this.store.selectSignal(selectIsPlaying);
   recommendations = this.store.selectSignal(selectRecommendedTracks);
+  vibeProfile = this.store.selectSignal(selectVibeProfile);
+  loadingRecommendations = this.store.selectSignal(selectLoadingRecommendations);
   queue = this.store.selectSignal(selectQueue);
   queueIndex = this.store.selectSignal(selectQueueIndex);
   isShuffled = this.store.selectSignal(selectIsShuffled);
@@ -726,7 +840,27 @@ export class PlayerBarComponent implements OnInit, OnDestroy {
     });
   }
 
+  toggleDrawer() {
+    const nextState = !this.isExpanded();
+    this.isExpanded.set(nextState);
+    if (nextState && this.recommendations().length === 0) {
+      this.refreshVibeRecommendations();
+    }
+  }
+
+  refreshVibeRecommendations() {
+    const t = this.track();
+    this.store.dispatch(PlayerActions.loadRecommendations({
+      query: t ? `${t.artists?.[0]?.name || ''} ${t.name}` : '',
+      track: t
+    }));
+  }
+
   ngOnInit() {
+    if (this.recommendations().length === 0) {
+      this.refreshVibeRecommendations();
+    }
+
     const interval = setInterval(() => {
       if (this.ytService.isPlayerReady()) {
         this.ytService.initPlayer('yt-player', '', (state) => {
@@ -860,7 +994,8 @@ export class PlayerBarComponent implements OnInit, OnDestroy {
   playRec(track: any) {
     this.store.dispatch(PlayerActions.setCurrentTrack({ track }));
     this.store.dispatch(PlayerActions.play());
-    this.toast.show(`Playing: ${track.name}`, 'info');
+    const scoreText = track.vibeMatchScore ? ` (${track.vibeMatchScore} Vibe Match)` : '';
+    this.toast.show(`Playing: ${track.name}${scoreText}`, 'success');
   }
 
   playFromQueue(index: number) {

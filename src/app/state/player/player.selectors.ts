@@ -28,6 +28,16 @@ export const selectRecommendedTracks = createSelector(
   (state) => state.recommendedTracks
 );
 
+export const selectVibeProfile = createSelector(
+  selectPlayerState,
+  (state) => state.vibeProfile || 'AETHER HARMONIC FLOW'
+);
+
+export const selectLoadingRecommendations = createSelector(
+  selectPlayerState,
+  (state) => state.loadingRecommendations
+);
+
 export const selectPlaylists = createSelector(
   selectPlayerState,
   (state) => state.playlists
