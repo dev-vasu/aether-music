@@ -14,54 +14,6 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <div class="aurora-view">
-      <!-- HERO EXPERIENCE -->
-      <section class="cosmic-hero glass" *ngIf="featuredTrack() as hero">
-        <div class="hero-backdrop" [style.backgroundImage]="'url(' + hero.album.images[0]?.url + ')'"></div>
-        <div class="hero-overlay"></div>
-
-        <div class="hero-content">
-          <div class="hero-left">
-            <div class="hero-tags">
-              <span class="hero-badge live-pulse">
-                <span class="pulsar-dot"></span>
-                Featured Orbit
-              </span>
-              <span class="hero-subtag">2026 Soundscape &bull; Lossless</span>
-            </div>
-            
-            <h1 class="hero-title">{{ hero.name }}</h1>
-            <p class="hero-artist">By {{ hero.artists[0]?.name }}</p>
-
-            <div class="hero-actions">
-              <button class="hero-play-btn" (click)="playFeatured()">
-                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                Launch Orbit
-              </button>
-              
-              <div class="hero-audio-spec" *ngIf="isPlaying() && currentTrack()?.id === hero.id">
-                <div class="spec-bars">
-                  <span class="sb"></span><span class="sb"></span><span class="sb"></span><span class="sb"></span>
-                </div>
-                <span>Playing in Realtime</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Rotating Vinyl Disc Visual -->
-          <div class="hero-right">
-            <div class="vinyl-rig" [class.spinning]="isPlaying() && currentTrack()?.id === hero.id" (click)="playFeatured()">
-              <div class="vinyl-disc">
-                <div class="vinyl-grooves"></div>
-                <div class="vinyl-center">
-                  <img [src]="hero.album.images[0]?.url" class="vinyl-cover" (error)="handleImgError($event)">
-                </div>
-              </div>
-              <div class="vinyl-glow"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- CATEGORY FILTER CHIPS -->
       <div class="category-filter-bar">
         <button
@@ -140,212 +92,7 @@ import { CommonModule } from '@angular/common';
   `,
   styles: [`
     .aurora-view {
-      padding: 0 48px;
-    }
-
-    /* COSMIC HERO BANNER */
-    .cosmic-hero {
-      position: relative;
-      border-radius: 36px;
-      overflow: hidden;
-      margin-bottom: 48px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-      min-height: 280px;
-    }
-    .hero-backdrop {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-size: cover;
-      background-position: center;
-      filter: blur(50px) saturate(1.8) brightness(0.4);
-      transform: scale(1.15);
-      z-index: 1;
-    }
-    .hero-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, rgba(3, 0, 8, 0.95) 0%, rgba(3, 0, 8, 0.7) 60%, rgba(3, 0, 8, 0.4) 100%);
-      z-index: 2;
-    }
-    .hero-content {
-      position: relative;
-      z-index: 3;
-      padding: 40px 48px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 32px;
-    }
-    .hero-left {
-      max-width: 580px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .hero-tags {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(168, 85, 247, 0.25);
-      border: 1px solid rgba(168, 85, 247, 0.5);
-      color: #e9d5ff;
-      padding: 6px 14px;
-      border-radius: 50px;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .pulsar-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #a855f7;
-      box-shadow: 0 0 10px #a855f7;
-      animation: pulse 1.5s infinite;
-    }
-    .hero-subtag {
-      font-size: 12px;
-      opacity: 0.6;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-    .hero-title {
-      font-size: 42px;
-      font-weight: 900;
-      letter-spacing: -1.5px;
-      line-height: 1.1;
-      background: linear-gradient(135deg, #ffffff 40%, rgba(255, 255, 255, 0.6) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero-artist {
-      font-size: 16px;
-      opacity: 0.7;
-      font-weight: 600;
-    }
-    .hero-actions {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      margin-top: 10px;
-    }
-    .hero-play-btn {
-      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-      border: none;
-      color: white;
-      padding: 14px 32px;
-      border-radius: 50px;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .hero-play-btn svg { width: 18px; height: 18px; fill: currentColor; }
-    .hero-play-btn:hover {
-      transform: scale(1.06);
-      box-shadow: 0 15px 40px rgba(168, 85, 247, 0.6);
-    }
-    .hero-audio-spec {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 12px;
-      opacity: 0.8;
-      font-weight: 700;
-      color: #c084fc;
-    }
-    .spec-bars {
-      display: flex;
-      align-items: flex-end;
-      gap: 2px;
-      height: 16px;
-    }
-    .sb {
-      width: 3px;
-      background: #a855f7;
-      border-radius: 2px;
-      animation: cWave 0.8s ease-in-out infinite alternate;
-    }
-    .sb:nth-child(1) { height: 60%; animation-delay: 0.1s; }
-    .sb:nth-child(2) { height: 100%; animation-delay: 0.3s; }
-    .sb:nth-child(3) { height: 40%; animation-delay: 0.2s; }
-    .sb:nth-child(4) { height: 80%; animation-delay: 0.4s; }
-
-    /* VINYL RECORD */
-    .hero-right {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .vinyl-rig {
-      position: relative;
-      width: 190px;
-      height: 190px;
-      cursor: pointer;
-      transition: transform 0.4s;
-    }
-    .vinyl-rig:hover { transform: scale(1.05); }
-    .vinyl-rig.spinning .vinyl-disc {
-      animation: vinylSpin 14s linear infinite;
-    }
-    .vinyl-disc {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: radial-gradient(circle, #1a1a24 0%, #0a0a0f 70%, #000 100%);
-      box-shadow: 0 15px 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.05);
-      border: 3px solid rgba(255,255,255,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .vinyl-grooves {
-      position: absolute;
-      width: 82%;
-      height: 82%;
-      border-radius: 50%;
-      border: 1px dashed rgba(255,255,255,0.08);
-    }
-    .vinyl-center {
-      width: 74px;
-      height: 74px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2px solid white;
-      box-shadow: 0 0 15px rgba(0,0,0,0.8);
-      position: relative;
-      z-index: 2;
-    }
-    .vinyl-cover { width: 100%; height: 100%; object-fit: cover; transform: scale(1.35); }
-    .vinyl-glow {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%);
-      filter: blur(25px);
-      z-index: -1;
+      padding: 24px 48px;
     }
 
     /* CATEGORY FILTER CHIPS */
@@ -355,7 +102,7 @@ import { CommonModule } from '@angular/common';
       gap: 10px;
       overflow-x: auto;
       padding-bottom: 12px;
-      margin-bottom: 44px;
+      margin-bottom: 36px;
     }
     .category-filter-bar::-webkit-scrollbar { height: 0; }
     .cat-chip {
@@ -387,7 +134,7 @@ import { CommonModule } from '@angular/common';
     .aurora-stacks {
       display: flex;
       flex-direction: column;
-      gap: 64px;
+      gap: 56px;
     }
     .sound-row .sound-meta {
       display: flex;
@@ -410,6 +157,7 @@ import { CommonModule } from '@angular/common';
       font-size: 26px;
       font-weight: 900;
       letter-spacing: -0.5px;
+      font-family: var(--font-display);
     }
     .row-play-all {
       background: rgba(255, 255, 255, 0.05);
@@ -448,27 +196,39 @@ import { CommonModule } from '@angular/common';
       transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     }
     .art-card.is-active-card .card-visual {
+      box-shadow: 0 10px 30px rgba(168, 85, 247, 0.5);
       border-color: #a855f7;
-      box-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
     }
+    .art-card:hover {
+      transform: translateY(-8px);
+    }
+    .art-card:hover .hover-glow {
+      opacity: 1;
+    }
+    .art-card:hover .play-trigger {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    .art-card:hover .track-image {
+      transform: scale(1.08);
+    }
+
     .card-visual {
       position: relative;
-      aspect-ratio: 1 / 1;
+      width: 215px;
+      height: 215px;
       border-radius: 24px;
       overflow: hidden;
-      background: #000;
-      border: 1px solid rgba(255,255,255,0.09);
-      margin-bottom: 14px;
-      box-shadow: 0 12px 35px rgba(0,0,0,0.4);
-      transition: all 0.3s;
+      margin-bottom: 16px;
+      background: #0d0c18;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      transition: all 0.3s ease;
     }
     .track-image {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transform: scale(1.4);
-      filter: contrast(1.05) saturate(1.15);
-      image-rendering: -webkit-optimize-contrast;
       transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
     }
     .hover-glow {
@@ -477,37 +237,38 @@ import { CommonModule } from '@angular/common';
       left: 0;
       width: 100%;
       height: 100%;
-      background: radial-gradient(circle at center, rgba(168, 85, 247, 0.3) 0%, transparent 70%);
+      background: linear-gradient(180deg, transparent 40%, rgba(3, 0, 8, 0.8) 100%);
       opacity: 0;
-      transition: opacity 0.4s;
+      transition: opacity 0.3s;
     }
+
     .card-eq-overlay {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 56px;
-      height: 56px;
-      background: rgba(168, 85, 247, 0.9);
-      border-radius: 50%;
+      bottom: 16px;
+      right: 16px;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      align-items: flex-end;
       gap: 3px;
-      box-shadow: 0 0 25px rgba(168, 85, 247, 0.9);
+      height: 18px;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      padding: 4px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(168, 85, 247, 0.4);
     }
     .c-bar {
-      width: 3.5px;
-      background: white;
+      width: 3px;
+      background: #a855f7;
       border-radius: 2px;
-      animation: cWave 0.8s ease-in-out infinite alternate;
+      animation: cWave 0.7s ease-in-out infinite alternate;
     }
-    .c-bar:nth-child(1) { height: 16px; animation-delay: 0.1s; }
-    .c-bar:nth-child(2) { height: 26px; animation-delay: 0.3s; }
-    .c-bar:nth-child(3) { height: 12px; animation-delay: 0.2s; }
+    .c-bar:nth-child(1) { height: 60%; animation-delay: 0.1s; }
+    .c-bar:nth-child(2) { height: 100%; animation-delay: 0.3s; }
+    .c-bar:nth-child(3) { height: 40%; animation-delay: 0.2s; }
+
     @keyframes cWave {
-      0% { height: 8px; }
-      100% { height: 26px; }
+      0% { height: 20%; }
+      100% { height: 100%; }
     }
 
     .play-trigger {
@@ -515,85 +276,63 @@ import { CommonModule } from '@angular/common';
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%) scale(0.8);
-      width: 56px;
-      height: 56px;
-      background: rgba(255,255,255,0.95);
+      width: 50px;
+      height: 50px;
+      background: white;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       opacity: 0;
-      transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
     }
     .play-trigger svg {
-      width: 28px;
-      height: 28px;
-      fill: black;
+      width: 20px;
+      height: 20px;
+      fill: #000;
       margin-left: 3px;
     }
-    .art-card:hover .track-image { transform: scale(1.5); }
-    .art-card:hover .hover-glow { opacity: 1; }
-    .art-card:hover .play-trigger {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
-    }
-    .art-card:hover { transform: translateY(-6px); }
+
     .card-info .name {
-      font-weight: 800;
       font-size: 15px;
+      font-weight: 700;
       margin-bottom: 4px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      color: rgba(255, 255, 255, 0.95);
     }
     .card-info .creator {
-      font-size: 12px;
-      opacity: 0.45;
-      font-weight: 600;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.45);
+      font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
     .discovery-loader {
-      margin-top: 100px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 24px;
+      justify-content: center;
+      padding: 80px 0;
+      gap: 20px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
     }
     .pulse-ring {
-      width: 56px;
-      height: 56px;
-      border: 2px solid #a855f7;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0% { transform: scale(0.8); opacity: 1; }
-      100% { transform: scale(2.5); opacity: 0; }
+      border: 3px solid rgba(168, 85, 247, 0.2);
+      border-top-color: #a855f7;
+      animation: spin 1s linear infinite;
     }
 
-    @media (max-width: 768px) {
-      .aurora-view { padding: 0 16px; }
-      .cosmic-hero { border-radius: 26px; margin-bottom: 28px; }
-      .hero-content { padding: 24px 20px; flex-direction: column-reverse; gap: 20px; }
-      .hero-right { width: 100%; justify-content: center; }
-      .vinyl-rig { width: 140px; height: 140px; }
-      .vinyl-center { width: 56px; height: 56px; }
-      .hero-title { font-size: 26px; }
-      .hero-artist { font-size: 13px; }
-      .hero-play-btn { padding: 10px 22px; font-size: 12px; }
-      
-      .category-filter-bar { margin-bottom: 28px; }
-      .aurora-stacks { gap: 36px; }
-      .sound-row h2 { font-size: 20px; }
-      .track-flow { gap: 14px; }
-      .art-card { width: 140px; }
-      .card-visual { border-radius: 18px; margin-bottom: 10px; }
-      .card-info .name { font-size: 13px; }
-      .card-info .creator { font-size: 11px; }
-      .play-trigger { width: 40px; height: 40px; }
-      .play-trigger svg { width: 20px; height: 20px; }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   `]
 })
@@ -619,12 +358,6 @@ export class HomeViewComponent implements OnInit {
     { title: 'Nebula Pop', key: 'english' as const, emoji: '✨' }
   ];
 
-  featuredTrack = computed(() => {
-    const data = this.musicData();
-    const trending = data?.trending;
-    return trending?.[0] || null;
-  });
-
   filteredCategories = computed(() => {
     const cat = this.activeCategory();
     if (cat === 'all') return this.musicCategories;
@@ -633,15 +366,6 @@ export class HomeViewComponent implements OnInit {
 
   ngOnInit() {
     this.store.dispatch(HomeActions.loadCategorizedMusic());
-  }
-
-  playFeatured() {
-    const hero = this.featuredTrack();
-    if (hero) {
-      const trending = this.musicData()?.trending || [];
-      this.store.dispatch(PlayerActions.setQueue({ tracks: trending, startIndex: 0 }));
-      this.toast.show(`Launched Orbit: ${hero.name}`, 'info');
-    }
   }
 
   handleImgError(event: any) {

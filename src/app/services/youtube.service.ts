@@ -227,7 +227,6 @@ export class YoutubeService {
   getCuratedMockData() {
     return {
       trending: [
-        { id: 'PfH7jq_uSCM', name: 'Die With A Smile', artists: [{ name: 'Lady Gaga & Bruno Mars' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/11/ae/f2/11aef294-f57c-bab9-c9fc-529162984e62/24UMGIM85348.rgb.jpg/600x600bb.jpg' }] } },
         { id: 'fHI8X4OXluQ', name: 'Blinding Lights', artists: [{ name: 'The Weeknd' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/6f/bc/e6/6fbce6c4-c38c-72d8-4fd0-66cfff32f679/20UMGIM12176.rgb.jpg/600x600bb.jpg' }] } },
         { id: 'L0X03zR0rQk', name: 'Levitating', artists: [{ name: 'Dua Lipa' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/c3/65/5d/c3655d88-8422-92a0-4ff6-99cf16c7f893/190295286101.jpg/600x600bb.jpg' }] } },
         { id: 'kJQP7kiw5Fk', name: 'Despacito', artists: [{ name: 'Luis Fonsi' }], album: { images: [{ url: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/05/cf/43/05cf43fa-0941-0dc5-a92c-e3a5cb48ef4e/00602557672522.rgb.jpg/600x600bb.jpg' }] } },

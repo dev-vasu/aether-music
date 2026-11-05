@@ -9,8 +9,8 @@ export class HomeEffects {
   private actions$ = inject(Actions);
   private ytService = inject(YoutubeService);
 
-  // Bumped to v10 to purge old cached mashups and use pristine official 1:1 square studio album art
-  private readonly CACHE_KEY = 'melody_home_cache_v10';
+  // Bumped to v11 to purge cached hero tracks and ensure clean curated home
+  private readonly CACHE_KEY = 'melody_home_cache_v11';
   private readonly CACHE_EXPIRY = 24 * 60 * 60 * 1000;
 
   loadCategorizedMusic$ = createEffect(() =>
@@ -21,7 +21,7 @@ export class HomeEffects {
         if (cachedData) return of(HomeActions.loadCategorizedMusicSuccess(cachedData));
 
         return forkJoin({
-          trending: this.ytService.searchMusic('Lady Gaga Bruno Mars The Weeknd', { useCache: true }),
+          trending: this.ytService.searchMusic('The Weeknd Dua Lipa Coldplay hits', { useCache: true }),
           hindi: this.ytService.searchMusic('Arijit Singh Pritam', { useCache: true }),
           english: this.ytService.searchMusic('Taylor Swift Billie Eilish', { useCache: true }),
           punjabi: this.ytService.searchMusic('Diljit Dosanjh Karan Aujla', { useCache: true }),
@@ -34,7 +34,9 @@ export class HomeEffects {
               const seenNames = new Set<string>();
               return tracks.filter(t => {
                 if (!t || !t.name) return false;
-                const normalizedName = t.name.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 15);
+                const lower = t.name.toLowerCase();
+                if (lower.includes('die with a smile')) return false;
+                const normalizedName = lower.replace(/[^a-z0-9]/g, '').substring(0, 15);
                 if (seenNames.has(normalizedName)) return false;
                 seenNames.add(normalizedName);
                 return true;
