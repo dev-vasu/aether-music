@@ -116,8 +116,8 @@ import { FormsModule } from '@angular/forms';
     .search-bar:focus-within {
       background: rgba(255, 255, 255, 0.09);
       width: 560px;
-      border-color: #a855f7;
-      box-shadow: 0 0 25px rgba(168, 85, 247, 0.25);
+      border-color: #ff5722;
+      box-shadow: 0 0 25px rgba(255, 87, 34, 0.25);
     }
     .search-icon { width: 20px; height: 20px; margin-right: 14px; opacity: 0.4; flex-shrink: 0; }
     .search-bar input {
@@ -146,15 +146,15 @@ import { FormsModule } from '@angular/forms';
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(168, 85, 247, 0.1);
-      color: #c084fc;
+      background: rgba(255, 87, 34, 0.1);
+      color: #ff5722;
       padding: 8px 18px;
       border-radius: 50px;
       font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      border: 1px solid rgba(168, 85, 247, 0.25);
+      border: 1px solid rgba(255, 87, 34, 0.25);
     }
     .api-notice svg { width: 15px; height: 15px; }
 
@@ -189,16 +189,16 @@ import { FormsModule } from '@angular/forms';
       transition: all 0.25s;
     }
     .tag-pill:hover {
-      background: rgba(168, 85, 247, 0.15);
-      border-color: #a855f7;
+      background: rgba(255, 87, 34, 0.15);
+      border-color: #ff5722;
       color: white;
       transform: translateY(-2px);
     }
     .tag-pill.active-tag {
-      background: linear-gradient(135deg, #6366f1, #a855f7);
+      background: #ff5722;
       color: white;
       border-color: transparent;
-      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.35);
+      box-shadow: 0 4px 15px rgba(255, 87, 34, 0.35);
     }
 
     .results-header {
@@ -238,8 +238,8 @@ import { FormsModule } from '@angular/forms';
       box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     }
     .track-card.is-active-track {
-      border-color: #a855f7;
-      box-shadow: 0 0 25px rgba(168, 85, 247, 0.3);
+      border-color: #ff5722;
+      box-shadow: 0 0 25px rgba(255, 87, 34, 0.3);
     }
 
     .img-container {
@@ -257,11 +257,9 @@ import { FormsModule } from '@angular/forms';
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transform: scale(1.4);
-      filter: contrast(1.05) saturate(1.1);
-      transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+      transition: transform 0.4s ease;
     }
-    .track-card:hover .track-img { transform: scale(1.5); }
+    .track-card:hover .track-img { transform: scale(1.04); }
     
     .card-eq-overlay {
       position: absolute;
@@ -270,7 +268,7 @@ import { FormsModule } from '@angular/forms';
       transform: translate(-50%, -50%);
       width: 48px;
       height: 48px;
-      background: rgba(168, 85, 247, 0.85);
+      background: rgba(255, 87, 34, 0.9);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -338,7 +336,7 @@ import { FormsModule } from '@angular/forms';
       width: 44px;
       height: 44px;
       border: 3px solid rgba(255, 255, 255, 0.1);
-      border-top-color: #a855f7;
+      border-top-color: #ff5722;
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -360,8 +358,8 @@ import { FormsModule } from '@angular/forms';
     .no-results-icon svg { width: 100%; height: 100%; fill: currentColor; }
     .no-results p { opacity: 0.5; font-size: 16px; font-weight: 600; }
     .retry-pill {
-      background: rgba(168, 85, 247, 0.2);
-      border: 1px solid #a855f7;
+      background: rgba(255, 87, 34, 0.2);
+      border: 1px solid #ff5722;
       color: white;
       padding: 10px 24px;
       border-radius: 50px;
@@ -369,7 +367,7 @@ import { FormsModule } from '@angular/forms';
       cursor: pointer;
       transition: all 0.25s;
     }
-    .retry-pill:hover { background: #a855f7; transform: scale(1.05); }
+    .retry-pill:hover { background: #ff5722; transform: scale(1.05); }
 
     @media (max-width: 768px) {
       .view-container { padding: 18px; }
