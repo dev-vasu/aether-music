@@ -38,8 +38,28 @@ function resolveYoutubeId(query) {
 }
 
 async function searchItunes(query, limit = 15) {
-  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=${limit}`;
-  const data = await fetchJson(url);
+  let url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=${limit}`;
+  let data = await fetchJson(url);
+
+  if (!data || !data.results || data.results.length === 0) {
+    // If complex multi-word query fails, strip common noise words ('hits', 'songs', 'audio', 'music')
+    const cleaned = query.replace(/\b(hits|songs|official|audio|music|playlist)\b/gi, '').trim();
+    if (cleaned && cleaned !== query) {
+      url = `https://itunes.apple.com/search?term=${encodeURIComponent(cleaned)}&entity=song&limit=${limit}`;
+      data = await fetchJson(url);
+    }
+  }
+
+  if (!data || !data.results || data.results.length === 0) {
+    // If still empty, try the primary artist/phrase (first 2 words)
+    const words = query.split(/\s+/).filter(w => !['hits', 'songs', 'audio', 'mix', 'music'].includes(w.toLowerCase()));
+    if (words.length >= 2) {
+      const firstArtist = words.slice(0, 2).join(' ');
+      url = `https://itunes.apple.com/search?term=${encodeURIComponent(firstArtist)}&entity=song&limit=${limit}`;
+      data = await fetchJson(url);
+    }
+  }
+
   if (!data || !data.results || data.results.length === 0) {
     return [];
   }

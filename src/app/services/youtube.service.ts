@@ -177,7 +177,7 @@ export class YoutubeService {
     if (!query) query = 'trending hits 2026';
     
     if (useCache && typeof localStorage !== 'undefined') {
-      const cached = localStorage.getItem(`melody_cache_v12_${query}`);
+      const cached = localStorage.getItem(`melody_cache_v13_${query}`);
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
@@ -197,7 +197,7 @@ export class YoutubeService {
         if (Array.isArray(liveTracks) && liveTracks.length > 0) {
           if (useCache && typeof localStorage !== 'undefined') {
             try {
-              localStorage.setItem(`melody_cache_v12_${query}`, JSON.stringify({ timestamp: Date.now(), data: liveTracks }));
+              localStorage.setItem(`melody_cache_v13_${query}`, JSON.stringify({ timestamp: Date.now(), data: liveTracks }));
             } catch {}
           }
           return liveTracks;

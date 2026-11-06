@@ -9,8 +9,8 @@ export class HomeEffects {
   private actions$ = inject(Actions);
   private ytService = inject(YoutubeService);
 
-  // Bumped to v12 to purge broken image cache and load verified studio covers
-  private readonly CACHE_KEY = 'melody_home_cache_v12';
+  // Bumped to v13 to purge broken/mashup cache and guarantee verified studio covers
+  private readonly CACHE_KEY = 'melody_home_cache_v13';
   private readonly CACHE_EXPIRY = 24 * 60 * 60 * 1000;
 
   loadCategorizedMusic$ = createEffect(() =>
@@ -21,20 +21,22 @@ export class HomeEffects {
         if (cachedData) return of(HomeActions.loadCategorizedMusicSuccess(cachedData));
 
         return forkJoin({
-          trending: this.ytService.searchMusic('The Weeknd Dua Lipa Coldplay hits', { useCache: true }),
-          hindi: this.ytService.searchMusic('Arijit Singh Pritam', { useCache: true }),
-          english: this.ytService.searchMusic('Taylor Swift Billie Eilish', { useCache: true }),
-          punjabi: this.ytService.searchMusic('Diljit Dosanjh Karan Aujla', { useCache: true }),
-          instaViral: this.ytService.searchMusic('INTERWORLD Kordhell Phonk', { useCache: true }),
-          devotional: this.ytService.searchMusic('Jagjit Singh Ramayan Hariharan', { useCache: true })
+          trending: this.ytService.searchMusic('The Weeknd', { useCache: true }),
+          hindi: this.ytService.searchMusic('Arijit Singh', { useCache: true }),
+          english: this.ytService.searchMusic('Billie Eilish', { useCache: true }),
+          punjabi: this.ytService.searchMusic('Diljit Dosanjh', { useCache: true }),
+          instaViral: this.ytService.searchMusic('Kordhell Phonk', { useCache: true }),
+          devotional: this.ytService.searchMusic('Jagjit Singh', { useCache: true })
         }).pipe(
           map(results => {
             const filterRowUnique = (tracks: any[]) => {
               if (!Array.isArray(tracks)) return [];
               const seenNames = new Set<string>();
+              const mashupTerms = ['mashup', 'mash up', 'compilation', 'jukebox', 'nonstop', 'fan edit', 'full album'];
               return tracks.filter(t => {
                 if (!t || !t.name) return false;
                 const lower = t.name.toLowerCase();
+                if (mashupTerms.some(term => lower.includes(term))) return false;
                 if (lower.includes('die with a smile')) return false;
                 const normalizedName = lower.replace(/[^a-z0-9]/g, '').substring(0, 15);
                 if (seenNames.has(normalizedName)) return false;
