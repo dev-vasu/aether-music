@@ -136,10 +136,37 @@ import { CommonModule } from '@angular/common';
             <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
           </button>
 
-          <!-- Tactile Braun Play/Pause Dial -->
+          <!-- Tactile Braun Play/Pause Dial with Dynamic Progress Bezel -->
           <div class="play-trigger-wrap" (click)="togglePlay()" title="Play / Pause (Space)">
             <button class="braun-play-dial" [class.active]="isPlaying()">
-              <span class="braun-indicator-dot" [class.glowing]="isPlaying()"></span>
+              <!-- Dynamic Circular Progress Bezel -->
+              <svg class="dial-progress-svg" viewBox="0 0 46 46">
+                <!-- Static recessed acoustic track -->
+                <circle cx="23" cy="23" r="20" class="dial-track"/>
+                <!-- Dynamic progress arc -->
+                <circle
+                  cx="23"
+                  cy="23"
+                  r="20"
+                  class="dial-progress-arc"
+                  [style.strokeDashoffset]="circleProgressOffset()"
+                  [class.active]="isPlaying()"/>
+                <!-- Dynamic traveling Braun amber indicator beacon -->
+                <circle
+                  [attr.cx]="leadingDotCoords().x"
+                  [attr.cy]="leadingDotCoords().y"
+                  r="2.2"
+                  class="dial-beacon-dot"
+                  [class.glowing]="isPlaying()"/>
+                <!-- Precision specular core highlight -->
+                <circle
+                  [attr.cx]="leadingDotCoords().x"
+                  [attr.cy]="leadingDotCoords().y"
+                  r="0.8"
+                  class="dial-beacon-core"
+                  [class.glowing]="isPlaying()"/>
+              </svg>
+
               <svg *ngIf="!isPlaying()" viewBox="0 0 24 24" class="play-icon"><path d="M8 5v14l11-7z"/></svg>
               <svg *ngIf="isPlaying()" viewBox="0 0 24 24" class="play-icon"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
             </button>
@@ -541,7 +568,7 @@ import { CommonModule } from '@angular/common';
       box-shadow: 0 0 5px rgba(255, 87, 34, 0.8);
     }
 
-    /* BRAUN TACTILE PLAY/PAUSE DIAL */
+    /* BRAUN TACTILE PLAY/PAUSE DIAL & DYNAMIC PROGRESS BEZEL */
     .play-trigger-wrap { display: flex; align-items: center; justify-content: center; }
     .braun-play-dial {
       width: 46px;
@@ -567,25 +594,56 @@ import { CommonModule } from '@angular/common';
       transform: translateY(1px);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(0, 0, 0, 0.2);
     }
-    .braun-indicator-dot {
+    .dial-progress-svg {
       position: absolute;
-      top: 5px;
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: #ff5722;
-      opacity: 0.35;
-      transition: all 0.3s ease;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
     }
-    .braun-indicator-dot.glowing {
+    .dial-track {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 2;
+    }
+    .dial-progress-arc {
+      fill: none;
+      stroke: #ff5722;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-dasharray: 125.66;
+      transform: rotate(-90deg);
+      transform-origin: 23px 23px;
+      transition: stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      filter: drop-shadow(0 0 2px rgba(255, 87, 34, 0.5));
+    }
+    .dial-progress-arc.active {
+      filter: drop-shadow(0 0 4px rgba(255, 87, 34, 0.85));
+    }
+    .dial-beacon-dot {
+      fill: #ff5722;
+      transition: cx 0.3s cubic-bezier(0.4, 0, 0.2, 1), cy 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      filter: drop-shadow(0 0 3px rgba(255, 87, 34, 0.8));
+    }
+    .dial-beacon-dot.glowing {
+      fill: #ff6b3d;
+      filter: drop-shadow(0 0 6px rgba(255, 87, 34, 1));
+    }
+    .dial-beacon-core {
+      fill: #ffffff;
+      opacity: 0.85;
+      transition: cx 0.3s cubic-bezier(0.4, 0, 0.2, 1), cy 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .dial-beacon-core.glowing {
       opacity: 1;
-      box-shadow: 0 0 6px rgba(255, 87, 34, 0.85);
     }
     .braun-play-dial .play-icon {
       width: 18px;
       height: 18px;
       fill: #ffffff;
-      margin-top: 3px;
+      margin-top: 1px;
     }
 
     /* UTILITY SECTION */
@@ -772,6 +830,22 @@ export class PlayerBarComponent implements OnInit, OnDestroy {
     const c = this.currentTime();
     if (!d) return 0;
     return (c / d) * 100;
+  });
+
+  readonly dialCircumference = 125.66; // 2 * Math.PI * 20
+
+  circleProgressOffset = computed(() => {
+    const percent = Math.min(100, Math.max(0, this.getProgressPercent()));
+    return this.dialCircumference * (1 - percent / 100);
+  });
+
+  leadingDotCoords = computed(() => {
+    const percent = Math.min(100, Math.max(0, this.getProgressPercent()));
+    const rad = ((percent / 100) * 360 - 90) * (Math.PI / 180);
+    return {
+      x: +(23 + 20 * Math.cos(rad)).toFixed(2),
+      y: +(23 + 20 * Math.sin(rad)).toFixed(2)
+    };
   });
 
   private lastPlayedId: string | null = null;
