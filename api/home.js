@@ -16,12 +16,62 @@ function fetchJson(url) {
   });
 }
 
-function resolveYoutubeId(query) {
+async function resolveYoutubeId(query) {
+  const primaryKey = process.env.YOUTUBE_API_KEY;
+  const backupKey = process.env.YOUTUBE_API_KEY_BACKUP;
+
+  // 1. Try official YouTube Data API
+  const tryApi = (key) => new Promise((resolve) => {
+    const url = `https://www.googleapis.com/youtube/v3/search?part=id&maxResults=1&type=video&q=${encodeURIComponent(query + ' official audio')}&key=${key}`;
+    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          if (j?.items?.[0]?.id?.videoId) return resolve(j.items[0].id.videoId);
+        } catch {}
+        resolve(null);
+      });
+    }).on('error', () => resolve(null));
+  });
+
+  if (primaryKey) {
+    const apiId = await tryApi(primaryKey);
+    if (apiId) return apiId;
+  }
+  if (backupKey) {
+    const apiId = await tryApi(backupKey);
+    if (apiId) return apiId;
+  }
+
+  // 2. High-reliability fallback scraper with proper headers, cookies & redirect support
   return new Promise((resolve) => {
     const refinedQuery = `${query} official audio`;
     const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(refinedQuery)}`;
 
-    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } }, (res) => {
+    const req = https.get(url, { 
+      headers: { 
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cookie': 'CONSENT=YES+cb.20210328-17-p0.en+FX+478'
+      } 
+    }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        let redirectUrl = res.headers.location;
+        if (redirectUrl.startsWith('/')) redirectUrl = `https://www.youtube.com${redirectUrl}`;
+        https.get(redirectUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (r2) => {
+          let d2 = '';
+          r2.on('data', c => d2 += c);
+          r2.on('end', () => {
+            const m = d2.match(/"videoId":"([a-zA-Z0-9_-]{11})"/);
+            resolve(m ? m[1] : null);
+          });
+        }).on('error', () => resolve(null));
+        return;
+      }
+
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
@@ -33,7 +83,8 @@ function resolveYoutubeId(query) {
         } catch {}
         resolve(null);
       });
-    }).on('error', () => resolve(null));
+    });
+    req.on('error', () => resolve(null));
   });
 }
 
@@ -158,17 +209,20 @@ module.exports = async (req, res) => {
         }
       }
 
-      // Pre-resolve YouTube ID for the first 2 songs in each category for instant playback
-      const topCount = Math.min(interleaved.length, 2);
+      // Pre-resolve YouTube IDs for top tracks in parallel for instant full-song playback
+      const topCount = Math.min(interleaved.length, 4);
+      const resolveTasks = [];
       for (let j = 0; j < topCount; j++) {
         const track = interleaved[j];
         if (track && track.artists?.[0]?.name && track.name) {
-          const ytId = await resolveYoutubeId(`${track.artists[0].name} - ${track.name}`);
-          if (ytId) {
-            track.id = ytId;
-          }
+          resolveTasks.push(
+            resolveYoutubeId(`${track.artists[0].name} - ${track.name}`).then(ytId => {
+              if (ytId) track.id = ytId;
+            })
+          );
         }
       }
+      await Promise.all(resolveTasks);
 
       categoryResults[catKey] = interleaved;
     });

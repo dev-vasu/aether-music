@@ -21,7 +21,8 @@ export class YoutubeService {
   // Public for debugging
   public activeKeyHint = signal<string>('N/A');
   private useBackupKey = false;
-  private previewAudio: HTMLAudioElement | null = null;
+  private pendingVideoId: string | null = null;
+  private pendingQuery: string | null = null;
 
   constructor() {
     this.loadApi();
@@ -62,7 +63,19 @@ export class YoutubeService {
         videoId: videoId,
         playerVars: { autoplay: 1, controls: 0, modestbranding: 1, rel: 0, origin: typeof window !== 'undefined' ? window.location.origin : '', mute: 0, enablejsapi: 1 },
         events: {
-          onReady: (event: any) => { event.target.unMute(); if (videoId) event.target.playVideo(); },
+          onReady: (event: any) => { 
+            event.target.unMute(); 
+            if (this.pendingVideoId) {
+              event.target.loadVideoById(this.pendingVideoId);
+              event.target.playVideo();
+              this.pendingVideoId = null;
+            } else if (this.pendingQuery) {
+              event.target.loadPlaylist({ listType: 'search', list: this.pendingQuery });
+              this.pendingQuery = null;
+            } else if (videoId) {
+              event.target.playVideo();
+            }
+          },
           onStateChange: (event: any) => onStateChange(event.data)
         }
       });
@@ -74,21 +87,15 @@ export class YoutubeService {
   async playVideo(trackOrId: any) {
     let videoId = typeof trackOrId === 'string' ? trackOrId : trackOrId?.id;
     const track = typeof trackOrId === 'object' ? trackOrId : null;
+    const q = track ? `${track.artists?.[0]?.name || ''} ${track.name}`.trim() : (videoId || '');
 
-    // Check if we need to resolve a YouTube ID for an iTunes official song
+    // Resolve YouTube full video ID for iTunes tracks
     if (!videoId || videoId.startsWith('itunes_') || videoId.length !== 11) {
-      const q = track ? `${track.artists?.[0]?.name || ''} ${track.name}` : videoId;
-      
-      // Start instantaneous preview playback for 0ms latency
-      if (track?.previewUrl && typeof window !== 'undefined') {
-        this.playPreviewAudio(track.previewUrl);
-      }
-
       try {
         const res = await fetch(`/api/resolve?q=${encodeURIComponent(q)}`);
         if (res.ok) {
           const json = await res.json();
-          if (json.id) {
+          if (json.id && json.id.length === 11) {
             videoId = json.id;
           }
         }
@@ -98,39 +105,31 @@ export class YoutubeService {
     }
 
     if (this.player && this.player.loadVideoById && videoId && videoId.length === 11) {
-      this.stopPreviewAudio();
       this.player.loadVideoById(videoId);
       this.player.unMute();
       this.player.playVideo();
-    }
-  }
-
-  playPreviewAudio(url: string) {
-    if (typeof window === 'undefined') return;
-    this.stopPreviewAudio();
-    try {
-      this.previewAudio = new Audio(url);
-      this.previewAudio.play().catch(() => {});
-    } catch {}
-  }
-
-  stopPreviewAudio() {
-    if (this.previewAudio) {
-      try {
-        this.previewAudio.pause();
-        this.previewAudio = null;
-      } catch {}
+    } else if (this.player && this.player.loadPlaylist && q) {
+      // Guaranteed full song playback using embedded search playlist
+      this.player.loadPlaylist({
+        listType: 'search',
+        list: `${q} official audio`
+      });
+      this.player.unMute();
+    } else {
+      if (videoId && videoId.length === 11) {
+        this.pendingVideoId = videoId;
+      } else if (q) {
+        this.pendingQuery = `${q} official audio`;
+      }
     }
   }
 
   unMute() {
     if (this.player && this.player.unMute) this.player.unMute();
-    if (this.previewAudio) this.previewAudio.muted = false;
   }
 
   pause() {
     if (this.player && this.player.pauseVideo) this.player.pauseVideo();
-    if (this.previewAudio) this.previewAudio.pause();
   }
 
   resume() {
@@ -138,7 +137,6 @@ export class YoutubeService {
       this.player.unMute();
       this.player.playVideo();
     }
-    if (this.previewAudio) this.previewAudio.play().catch(() => {});
   }
 
   setVolume(volume: number) {
@@ -146,27 +144,17 @@ export class YoutubeService {
       this.player.unMute();
       this.player.setVolume(volume);
     }
-    if (this.previewAudio) this.previewAudio.volume = Math.max(0, Math.min(1, volume / 100));
   }
 
-  getCurrentTime() {
-    if (this.previewAudio && !this.previewAudio.paused) {
-      return this.previewAudio.currentTime;
-    }
+  getCurrentTime(): number {
     return (this.player && this.player.getCurrentTime) ? this.player.getCurrentTime() : 0;
   }
 
-  getDuration() {
-    if (this.previewAudio && !this.previewAudio.paused && this.previewAudio.duration) {
-      return this.previewAudio.duration;
-    }
+  getDuration(): number {
     return (this.player && this.player.getDuration) ? this.player.getDuration() : 0;
   }
 
   seekTo(seconds: number) {
-    if (this.previewAudio && !this.previewAudio.paused) {
-      this.previewAudio.currentTime = seconds;
-    }
     if (this.player && this.player.seekTo) this.player.seekTo(seconds, true);
   }
 
