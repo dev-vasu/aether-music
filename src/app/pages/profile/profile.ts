@@ -754,6 +754,7 @@ import { selectIsPlaying, selectVibeProfile } from '../../state/player/player.se
       .alias-container { justify-content: center; }
       .badges-row { justify-content: center; }
       .telemetry-grid { grid-template-columns: 1fr; }
+      .grid-content { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     }
   `]
 })

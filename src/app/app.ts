@@ -338,7 +338,7 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       transition: all 0.3s;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
-    .identity-active { border-color: #a855f7; box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); }
+    .identity-active { border-color: #ff5722; box-shadow: 0 0 20px rgba(255, 87, 34, 0.4); }
     .user-avatar-wrap {
       width: 34px;
       height: 34px;
@@ -348,7 +348,7 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #a855f7;
+      background: #1c1e23;
     }
     .mini-svg-avatar { width: 20px; height: 20px; }
     .mini-svg-avatar ::ng-deep svg { width: 100%; height: 100%; display: block; }
@@ -498,7 +498,7 @@ import { selectCurrentTrack, selectIsPlaying, selectIsShuffled, selectRepeatMode
       .glass-dock { justify-content: space-around; padding: 8px; border-radius: 25px; }
       .dock-brand, .dock-separator { display: none; }
       .dock-link { padding: 0 10px; flex-direction: column; gap: 4px; height: auto; opacity: 0.5; }
-      .dock-link.active { background: none; box-shadow: none; color: #a855f7; opacity: 1; }
+      .dock-link.active { background: none; box-shadow: none; color: #ff5722; opacity: 1; }
       .dock-link .label { display: block; font-size: 10px; }
       .identity-anchor { top: 16px; right: 16px; }
       .shortcuts-trigger { display: none; }
