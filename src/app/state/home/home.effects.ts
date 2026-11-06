@@ -2,32 +2,30 @@ import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { HomeActions } from './home.actions';
 import { YoutubeService } from '../../services/youtube.service';
-import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
+import { catchError, from, map, of, switchMap } from 'rxjs';
 
 @Injectable()
 export class HomeEffects {
   private actions$ = inject(Actions);
   private ytService = inject(YoutubeService);
 
-  // Bumped to v13 to purge broken/mashup cache and guarantee verified studio covers
-  private readonly CACHE_KEY = 'melody_home_cache_v13';
-  private readonly CACHE_EXPIRY = 24 * 60 * 60 * 1000;
-
   loadCategorizedMusic$ = createEffect(() =>
     this.actions$.pipe(
       ofType(HomeActions.loadCategorizedMusic),
       switchMap(() => {
-        const cachedData = this.getCache();
-        if (cachedData) return of(HomeActions.loadCategorizedMusicSuccess(cachedData));
+        // Purge any stale legacy 24-hour localStorage cache to ensure dynamic refreshes
+        if (typeof localStorage !== 'undefined') {
+          try {
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+              const key = localStorage.key(i);
+              if (key && (key.startsWith('melody_home_cache') || key.startsWith('melody_cache_v13_Arijit') || key.startsWith('melody_cache_v13_Diljit'))) {
+                localStorage.removeItem(key);
+              }
+            }
+          } catch {}
+        }
 
-        return forkJoin({
-          trending: this.ytService.searchMusic('The Weeknd', { useCache: true }),
-          hindi: this.ytService.searchMusic('Arijit Singh', { useCache: true }),
-          english: this.ytService.searchMusic('Billie Eilish', { useCache: true }),
-          punjabi: this.ytService.searchMusic('Diljit Dosanjh', { useCache: true }),
-          instaViral: this.ytService.searchMusic('Kordhell Phonk', { useCache: true }),
-          devotional: this.ytService.searchMusic('Jagjit Singh', { useCache: true })
-        }).pipe(
+        return from(this.ytService.getCategorizedHomeMusic()).pipe(
           map(results => {
             const filterRowUnique = (tracks: any[]) => {
               if (!Array.isArray(tracks)) return [];
@@ -37,7 +35,6 @@ export class HomeEffects {
                 if (!t || !t.name) return false;
                 const lower = t.name.toLowerCase();
                 if (mashupTerms.some(term => lower.includes(term))) return false;
-                if (lower.includes('die with a smile')) return false;
                 const normalizedName = lower.replace(/[^a-z0-9]/g, '').substring(0, 15);
                 if (seenNames.has(normalizedName)) return false;
                 seenNames.add(normalizedName);
@@ -46,23 +43,22 @@ export class HomeEffects {
             };
 
             const curated = this.ytService.getCuratedMockData();
-            const trendingTracks = filterRowUnique(results.trending);
-            const hindiTracks = filterRowUnique(results.hindi);
-            const englishTracks = filterRowUnique(results.english);
-            const punjabiTracks = filterRowUnique(results.punjabi);
-            const instaTracks = filterRowUnique(results.instaViral);
-            const devotionalTracks = filterRowUnique(results.devotional);
+            const trendingTracks = filterRowUnique(results?.trending);
+            const hindiTracks = filterRowUnique(results?.hindi);
+            const englishTracks = filterRowUnique(results?.english);
+            const punjabiTracks = filterRowUnique(results?.punjabi);
+            const instaTracks = filterRowUnique(results?.instaViral);
+            const devotionalTracks = filterRowUnique(results?.devotional);
 
             const finalized = {
-              trending: trendingTracks.length >= 4 ? trendingTracks : curated.trending,
-              hindi: hindiTracks.length >= 4 ? hindiTracks : curated.hindi,
-              english: englishTracks.length >= 4 ? englishTracks : curated.english,
-              punjabi: punjabiTracks.length >= 4 ? punjabiTracks : curated.punjabi,
-              instaViral: instaTracks.length >= 4 ? instaTracks : curated.instaViral,
-              devotional: devotionalTracks.length >= 4 ? devotionalTracks : curated.devotional
+              trending: trendingTracks.length >= 3 ? trendingTracks : curated.trending,
+              hindi: hindiTracks.length >= 3 ? hindiTracks : curated.hindi,
+              english: englishTracks.length >= 3 ? englishTracks : curated.english,
+              punjabi: punjabiTracks.length >= 3 ? punjabiTracks : curated.punjabi,
+              instaViral: instaTracks.length >= 3 ? instaTracks : curated.instaViral,
+              devotional: devotionalTracks.length >= 3 ? devotionalTracks : curated.devotional
             };
 
-            this.saveCache(finalized);
             return HomeActions.loadCategorizedMusicSuccess(finalized);
           }),
           catchError(() => of(HomeActions.loadCategorizedMusicSuccess(this.ytService.getCuratedMockData())))
@@ -70,26 +66,4 @@ export class HomeEffects {
       })
     )
   );
-
-  private getCache() {
-    try {
-      const item = localStorage.getItem(this.CACHE_KEY);
-      if (!item) return null;
-      const parsed = JSON.parse(item);
-      if (Date.now() - parsed.timestamp > this.CACHE_EXPIRY) {
-        localStorage.removeItem(this.CACHE_KEY);
-        return null;
-      }
-      return parsed.data;
-    } catch { return null; }
-  }
-
-  private saveCache(data: any) {
-    try {
-      localStorage.setItem(this.CACHE_KEY, JSON.stringify({
-        timestamp: Date.now(),
-        data: data
-      }));
-    } catch {}
-  }
 }
