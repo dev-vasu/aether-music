@@ -141,29 +141,21 @@ import { CommonModule } from '@angular/common';
             <button class="braun-play-dial" [class.active]="isPlaying()">
               <!-- Dynamic Circular Progress Bezel -->
               <svg class="dial-progress-svg" viewBox="0 0 46 46">
-                <!-- Static recessed acoustic track -->
-                <circle cx="23" cy="23" r="20" class="dial-track"/>
-                <!-- Dynamic progress arc -->
+                <!-- Dynamic progress arc (only visible when progress > 0) -->
                 <circle
+                  *ngIf="getProgressPercent() > 0"
                   cx="23"
                   cy="23"
-                  r="20"
+                  r="18"
                   class="dial-progress-arc"
                   [style.strokeDashoffset]="circleProgressOffset()"
                   [class.active]="isPlaying()"/>
-                <!-- Dynamic traveling Braun amber indicator beacon -->
+                <!-- Traveling Braun orange indicator dot in original aesthetic -->
                 <circle
                   [attr.cx]="leadingDotCoords().x"
                   [attr.cy]="leadingDotCoords().y"
-                  r="2.2"
-                  class="dial-beacon-dot"
-                  [class.glowing]="isPlaying()"/>
-                <!-- Precision specular core highlight -->
-                <circle
-                  [attr.cx]="leadingDotCoords().x"
-                  [attr.cy]="leadingDotCoords().y"
-                  r="0.8"
-                  class="dial-beacon-core"
+                  r="2"
+                  class="braun-indicator-dot"
                   [class.glowing]="isPlaying()"/>
               </svg>
 
@@ -603,17 +595,12 @@ import { CommonModule } from '@angular/common';
       pointer-events: none;
       overflow: visible;
     }
-    .dial-track {
-      fill: none;
-      stroke: rgba(255, 255, 255, 0.08);
-      stroke-width: 2;
-    }
     .dial-progress-arc {
       fill: none;
       stroke: #ff5722;
       stroke-width: 2;
       stroke-linecap: round;
-      stroke-dasharray: 125.66;
+      stroke-dasharray: 113.1;
       transform: rotate(-90deg);
       transform-origin: 23px 23px;
       transition: stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -622,22 +609,14 @@ import { CommonModule } from '@angular/common';
     .dial-progress-arc.active {
       filter: drop-shadow(0 0 4px rgba(255, 87, 34, 0.85));
     }
-    .dial-beacon-dot {
+    .braun-indicator-dot {
       fill: #ff5722;
-      transition: cx 0.3s cubic-bezier(0.4, 0, 0.2, 1), cy 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      filter: drop-shadow(0 0 3px rgba(255, 87, 34, 0.8));
+      opacity: 0.35;
+      transition: cx 0.3s cubic-bezier(0.4, 0, 0.2, 1), cy 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
     }
-    .dial-beacon-dot.glowing {
-      fill: #ff6b3d;
-      filter: drop-shadow(0 0 6px rgba(255, 87, 34, 1));
-    }
-    .dial-beacon-core {
-      fill: #ffffff;
-      opacity: 0.85;
-      transition: cx 0.3s cubic-bezier(0.4, 0, 0.2, 1), cy 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .dial-beacon-core.glowing {
+    .braun-indicator-dot.glowing {
       opacity: 1;
+      filter: drop-shadow(0 0 6px rgba(255, 87, 34, 0.85));
     }
     .braun-play-dial .play-icon {
       width: 18px;
@@ -832,7 +811,7 @@ export class PlayerBarComponent implements OnInit, OnDestroy {
     return (c / d) * 100;
   });
 
-  readonly dialCircumference = 125.66; // 2 * Math.PI * 20
+  readonly dialCircumference = 113.1; // 2 * Math.PI * 18
 
   circleProgressOffset = computed(() => {
     const percent = Math.min(100, Math.max(0, this.getProgressPercent()));
@@ -843,8 +822,8 @@ export class PlayerBarComponent implements OnInit, OnDestroy {
     const percent = Math.min(100, Math.max(0, this.getProgressPercent()));
     const rad = ((percent / 100) * 360 - 90) * (Math.PI / 180);
     return {
-      x: +(23 + 20 * Math.cos(rad)).toFixed(2),
-      y: +(23 + 20 * Math.sin(rad)).toFixed(2)
+      x: +(23 + 18 * Math.cos(rad)).toFixed(2),
+      y: +(23 + 18 * Math.sin(rad)).toFixed(2)
     };
   });
 
