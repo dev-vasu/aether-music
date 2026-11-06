@@ -43,8 +43,8 @@ export const initialState: PlayerState = {
   recommendedTracks: [],
   vibeProfile: 'AETHER HARMONIC FLOW',
   loadingRecommendations: false,
-  primaryColor: '#6366f1',
-  secondaryColor: '#a855f7',
+  primaryColor: '#ff5722',
+  secondaryColor: '#f59e0b',
   loading: false,
   error: null,
 };

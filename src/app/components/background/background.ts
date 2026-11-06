@@ -128,7 +128,7 @@ export class BackgroundComponent {
 
   universeBackground = computed(() => {
     const p = this.playerColors().primary || '#ff5722';
-    const s = this.playerColors().secondary || '#a855f7';
+    const s = this.playerColors().secondary || '#f59e0b';
     return `radial-gradient(ellipse 90% 60% at 20% 10%, color-mix(in srgb, ${p} 16%, #0f1013 84%) 0%, transparent 70%),
             radial-gradient(ellipse 80% 50% at 80% 90%, color-mix(in srgb, ${s} 14%, #0c0d10 86%) 0%, transparent 65%),
             #0f1013`;
@@ -140,13 +140,13 @@ export class BackgroundComponent {
   });
 
   secondaryGlow = computed(() => {
-    const s = this.playerColors().secondary || '#ff5722';
+    const s = this.playerColors().secondary || '#f59e0b';
     return `radial-gradient(circle at 60% 60%, color-mix(in srgb, ${s} 32%, transparent) 0%, color-mix(in srgb, ${s} 12%, transparent) 48%, transparent 75%)`;
   });
 
   centerGlow = computed(() => {
     const p = this.playerColors().primary || '#ff5722';
-    const s = this.playerColors().secondary || '#a855f7';
+    const s = this.playerColors().secondary || '#f59e0b';
     return `radial-gradient(ellipse at 50% 50%, color-mix(in srgb, ${p} 22%, transparent) 0%, color-mix(in srgb, ${s} 16%, transparent) 45%, transparent 72%)`;
   });
 

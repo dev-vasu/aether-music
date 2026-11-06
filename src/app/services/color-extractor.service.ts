@@ -49,7 +49,7 @@ export class ColorExtractorService {
       return this.knownPalettes[key];
     }
 
-    const defaultFallback = { primary: '#ff5722', secondary: '#a855f7' };
+    const defaultFallback = { primary: '#ff5722', secondary: '#f59e0b' };
     if (!imageUrl) return defaultFallback;
 
     return new Promise<{ primary: string; secondary: string }>((resolve) => {
